@@ -1,7 +1,7 @@
 # Init logging object
 import argparse
 import os
-import warnings
+from pathlib import Path
 
 import torch
 from torch import nn
@@ -127,11 +127,33 @@ class SummaryWriter():
         @param version:
         @return:
         """
-        if self.use_wandb:
-            data_path, _ = self.download_dataset_artifact(dataset_name, version)
-            return data_path
-        else:
+        if local_path.startswith('http'):
+            root = Path('./datasets')
+            root.mkdir(parents=True, exist_ok=True)  # create root
+            filename = root / Path(local_path).name
+            print(f'Downloading {local_path} to {filename}')
+            torch.hub.download_url_to_file(local_path, filename)
+            local_path = str(filename)
+            if local_path.endswith('.zip'):  # unzip
+                save_path = root / Path(filename.name[:-len('.zip')])
+                print(f'Unziping {filename} to {save_path}')
+                import zipfile
+                with zipfile.ZipFile(filename, 'r') as zip_ref:
+                    zip_ref.extractall(save_path)
+                local_path = str(save_path)
             return local_path
+
+        if Path(local_path).exists():
+            # TODO: check whether local_path contains the right version
+            return local_path
+
+        elif not Path(local_path).exists():
+            if self.use_wandb:
+                data_path, _ = self.download_dataset_artifact(dataset_name, version)
+                return data_path
+
+        else:
+            raise Exception('Dataset not found.')
 
     def log_dataset_artifact(self,
                              path: str,

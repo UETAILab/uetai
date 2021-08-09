@@ -1,8 +1,6 @@
-=====
-uetai
-=====
-
-This is the documentation of **uetai**.
+uetai v0.1
+==========
+Welcome, this is the documentation of **uetai** 0.1, last updated |today|.
 
 .. note::
 

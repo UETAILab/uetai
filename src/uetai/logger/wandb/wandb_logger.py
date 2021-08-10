@@ -226,8 +226,8 @@ class WandbLogger:
             logger = WandbLogger()
             logger.log_dataset_artifact(path, 'raw-mnist', 'dataset')
         """
-        if not os.path.exists(path):
-            print('File or dir does not exist.')
+        if not Path(path).exists():
+            raise Exception(f'{path} does not exist.')
             return
 
         dataset_artifact = wandb.Artifact(name=artifact_name,
@@ -239,6 +239,7 @@ class WandbLogger:
             dataset_artifact.add_file(path)
         print('Upload dataset into Weight & Biases.')
         self.wandb_run.log_artifact(dataset_artifact)
+        return dataset_artifact
 
     def create_dataset_artifact(self, path, name='dataset', type='dataset'):
         """
@@ -300,6 +301,7 @@ class WandbLogger:
             aliases.append('epoch ' + str(epoch + 1))
         self.wandb_run.log_artifact(model_artifact, aliases=aliases)
         print(f"Saving model on epoch {epoch} done.")
+        return model_artifact
 
     def log_training_process(self):
         pass

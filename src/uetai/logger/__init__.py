@@ -135,18 +135,19 @@ defaults to "gradients"
 defaults to None
         :type idx: [type], optional
 
-        :return:
-        :rtype: `wandb.Graph` or None
+        :return: A model histogram of weights and biases
+        :rtype: ``wandb.Graph`` or None
 
         :raises ValueError: If called before `wandb.init` \
 or if any of models is not a torch.nn.Module.
 
         :example:
             .. code::python
-                >>> from torchvision.models as models
-                >>> model = models.resnet18()
-                >>> # before training process
-                >>> logger.watch(model=model, log_freq=10)
+            >>> from torchvision.models as models
+            >>> model = models.resnet18()
+            >>> # before training process
+            >>> logger.watch(model=model, log_freq=10)
+
         """
         if self.use_wandb:
             model_graph = self.wandb.watch(model, criterion, log, log_freq, idx)
@@ -176,7 +177,8 @@ or if any of models is not a torch.nn.Module.
 
             **add_scalars**
 
-        :example: .. code:: python
+        :example:
+            .. code:: python
             >>> # basic usage
             >>> logger.add_scalar(tag='train/loss', scalar_value=0.5)
 
@@ -216,7 +218,8 @@ after epoch of event
 
             **add_scalar**
 
-        :example: .. code:: python
+        :example:
+            .. code:: python
             >>> main_tag = 'train'
             >>> for i in range(10):
             >>>    tag_scalar_dict = {'loss_cls' = i/10,
@@ -238,7 +241,7 @@ after epoch of event
         self,
         local_path: str,
         dataset_name: str = None,
-        version: str = "latest"
+        alias: str = "latest"
     ):
         """Check local dataset path if user are using Tensorboard, otherwise check W&B
         artifact and download (if need). User can pass url, which starts with "http",
@@ -248,12 +251,35 @@ after epoch of event
         :type local_path: str
         :param dataset_name: For download W&B dataset artifact
         :type dataset_name: str, optional
-        :param version: Dataset artifact version, defaults to "latest"
-        :type version: str, optional
+        :param alias: Dataset artifact version, defaults to "latest"
+        :type alias: str, optional
 
         :raises Exception: If local path not found or dataset artifact does not exist.
         :return: Path to dataset (downloaded) folder
         :rtype: str
+
+        .. admonition:: See also
+            :class: tip
+
+            **log_dataset_artifact**, **download_dataset_artifact**
+
+        :example:
+            .. code:: python
+            >>> # basic usage (with Tensorboard)
+            >>> data_dir = logger.data_path('./dataset/MNIST')
+
+            .. code:: python
+            >>> # using `data_path` to download dataset by url
+            >>> url = 'https://github.com/manhdung20112000/\
+torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
+            >>> data_dir = logger.data_path(url)
+
+            .. code:: python
+            >>> # download dataset artifact (with W&B)
+            >>> data_dir = logger.data_path(
+            >>>                 local_path='./datasets/',
+            >>>                 dataset_name='MNIST',
+            >>>                 alias='latest')
         """
         if local_path.startswith("http"):
             root = Path("./datasets")
@@ -279,7 +305,8 @@ after epoch of event
         elif not Path(local_path).exists():
             if self.use_wandb:
                 if dataset_name is not None:
-                    data_path, _ = self.download_dataset_artifact(dataset_name, version)
+                    data_path, _ = self.download_dataset_artifact(
+                        dataset_name, alias, save_path=local_path)
                     return data_path
 
         else:
@@ -292,35 +319,63 @@ after epoch of event
         dataset_type: str = "dataset",
         dataset_metadata: dict = None,
     ):
-        """
-        Log dataset as W&B artifact.
+        """Logging dataset as W&B artifact
 
-        Args:
-            path (str): Path to weight local file
-            artifact_name (str): Name represents the dataset artifact
-            dataset_type (str): Datasets' type
-            dataset_metadata (dict): Datasets' metadata
+        :param path: Path to weight local file
+        :type path: str
+        :param artifact_name: Dataset artifact name
+        :type artifact_name: str
+        :param dataset_type: Dataset's type, defaults to "dataset"
+        :type dataset_type: str, optional
+        :param dataset_metadata: Dataset's metadata, defaults to None
+        :type dataset_metadata: dict, optional
+
+        :raise Exception: if ``path`` does not exist.
+        :return: A W&B dataset artifact
+        :rtype: ``wandb.Artifact``
+
+        .. admonition:: See also
+            :class: tip
+
+            **download_dataset_artifact**
+
+        :example:
+            .. code::python
+            >>> logger.log_dataset_artifact('path/to/dataset', 'mnist')
         """
         if self.use_wandb:
-            self.wandb.log_dataset_artifact(
+            dataset_artifact = self.wandb.log_dataset_artifact(
                 path, artifact_name, dataset_type, dataset_metadata
             )
-            pass
-        else:
-            self._log_message("Does not support upload dataset to W&B.")
+            return dataset_artifact
+
+        self._log_message("Does not support upload dataset to W&B.")
+        return None
 
     def download_dataset_artifact(
-        self, dataset_name: str, version: str, save_path: str = None
+        self, dataset_name: str, version: str = 'latest', save_path: str = None
     ):
-        """
-        Download dataset artifact from Weight & Biases
+        """Download artifact dataset from W&B
 
-        Agrs:
-            dataset_name (str): Artifact name
-            version (str): artifact version
+        :param dataset_name: Dataset name
+        :type dataset_name: str
+        :param version: Dataset version, defaults to latest
+        :type version: str, optional
+        :param save_path: Path to save dir, defaults to None
+        :type save_path: str, optional
+        :return: Local dataset path and artifact object
+        :rtype: (Path, ``wandb.Artifact``)
 
-        Returns:
-            (Path, wandb.Artifact) Local dataset path, Artifact object
+        .. admonition:: See also
+            :class: tip
+
+            **log_dataset_artifact**
+
+        :example:
+            .. code::python
+            >>> # basic usage
+            >>> data_dir, _ = logger.download_dataset_artifact('mnist', 'v1')
+
         """
         if self.use_wandb:
             dataset_dir, version = self.wandb.download_dataset_artifact(
@@ -343,33 +398,63 @@ after epoch of event
         scores: float or dict = None,
         opt: argparse.Namespace = None,
     ):
-        """
-        Logging the model as W&B artifact.
+        """Logging model weight as W&B artifact
 
-        Args:
-            path (str): Path to weight local file
-            epoch (int): Current epoch number
-            scores (float/dict): score(s) represents for current epoch
-            opt (namespace): Comand line arguments to store on artifact
+        :param path: Path to weight local file
+        :type path: str
+        :param epoch: Current epoch, defaults to None
+        :type epoch: int, optional
+        :param scores: Model score(s) in current epoch, defaults to None
+        :type scores: float/dict, optional
+        :param opt: Comand line arguments to store on artifact, defaults to None
+        :type opt: argparse.Namespace, optional
+
+        :return: Models' weight as W&B aritfact
+        :rtype: ``wandb.Artifact`` or None
+
+        .. admonition:: See also
+            :class: tip
+
+            **save**
+
+        :example:
+            .. code::python
+            >>> # basic usage
+            >>> for epoch in range(epochs):
+            >>>     torch.save(model.state_dict(), 'weight.pt')
+            >>>     log_model_artifact('weight.pt', epoch)
         """
         if self.use_wandb:
-            self.wandb.log_model(path, epoch, scores, opt)
-        else:
-            self._log_message(
-                "Does not support upload dataset artifact to W&B."
-            )
+            model_artifact = self.wandb.log_model(path, epoch, scores, opt)
+            return model_artifact
+
+        self._log_message(
+            "Does not support upload dataset artifact to W&B."
+        )
+        return None
 
     def save(self, obj, path: str, epoch: int = None, scores: float or dict = None):
-        """Saving
+        """Saving model ``state_dict`` and logging into W&B
 
         :param obj: [description]
-        :type obj: [type]
-        :param path: [description]
+        :type obj: nn.Module or list
+        :param path: Save path
         :type path: str
-        :param epoch: [description], defaults to None
+        :param epoch: Current epoch, defaults to None
         :type epoch: int, optional
-        :param scores: [description], defaults to None
-        :type scores: floatordict, optional
+        :param scores: Model score(s) in current epoch, defaults to None
+        :type scores: float/dict, optional
+
+        .. admonition:: See also
+            :class: tip
+
+            **log_model_artifact**
+
+        :example:
+            .. code::python
+            >>> # basic usage
+            >>> for epoch in range(epochs):
+            >>>     logger.save(model.state_dict, './weight.pt')
         """
         parent_path = os.path.normpath(os.path.join(path, os.path.pardir))
         if not os.path.exists(parent_path):

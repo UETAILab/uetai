@@ -234,14 +234,26 @@ after epoch of event
                 main_tag, tag_scalar_dict, global_step, walltime
             )
 
-    def data_path(self, local_path: str, dataset_name: str, version: str = "latest"):
-        """
-        This function will return the local dataset path in local environment,
-         return the wandb datapath in wandb environment.
-        @param local_path:
-        @param dataset_name:
-        @param version:
-        @return:
+    def data_path(
+        self,
+        local_path: str,
+        dataset_name: str = None,
+        version: str = "latest"
+    ):
+        """Check local dataset path if user are using Tensorboard, otherwise check W&B
+        artifact and download (if need). User can pass url, which starts with "http",
+        to local_path for download it (and unzip if url ends with ".zip")
+
+        :param local_path: path to local dataset folder or download url
+        :type local_path: str
+        :param dataset_name: For download W&B dataset artifact
+        :type dataset_name: str, optional
+        :param version: Dataset artifact version, defaults to "latest"
+        :type version: str, optional
+
+        :raises Exception: If local path not found or dataset artifact does not exist.
+        :return: Path to dataset (downloaded) folder
+        :rtype: str
         """
         if local_path.startswith("http"):
             root = Path("./datasets")
@@ -266,8 +278,9 @@ after epoch of event
 
         elif not Path(local_path).exists():
             if self.use_wandb:
-                data_path, _ = self.download_dataset_artifact(dataset_name, version)
-                return data_path
+                if dataset_name is not None:
+                    data_path, _ = self.download_dataset_artifact(dataset_name, version)
+                    return data_path
 
         else:
             raise Exception("Dataset not found.")
@@ -379,16 +392,20 @@ after epoch of event
                 f"Saved model in {path}. Using `wandb` to upload model into W&B."
             )
 
-    def download_model_artifact(self, artifact_name: str = None, alias: str = None):
-        """
-        Download model artifact from Weight & Biases and extract model run's metadata
+    def download_model_artifact(self, artifact_name: str, alias: str = 'latest'):
+        """Download model artifact from W&b and extract model run's metadata
 
-        Args:
-            artifact_name (str): Artifact name
-            alias (str): artifact version
+        :param artifact_name: W&B artifact name
+        :type artifact_name: str
+        :param alias: Artifact version, defaults to latest
+        :type alias: str, optional
+        :return: Artifact path to directory and `wandb.Artifact` object or None, None
+        :rtype: str, wandb.Artifact
 
-        Returns:
-            (Path, wandb.Artifact)
+        .. admonition:: See also
+            :class: tip
+
+            **log_model_artifact, log_dataset_artifact, download_dataset_artifact**
         """
         # TODO: extract run's metadata
         if self.use_wandb:
@@ -396,9 +413,6 @@ after epoch of event
                 path=artifact_name, alias=alias
             )
             return artifact_dir, artifact
-        else:
-            self._log_message(
-                "Does not support download dataset artifact from W&B."
-            )
 
+        self._log_message("Does not support download dataset artifact from W&B.")
         return None, None

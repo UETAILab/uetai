@@ -111,7 +111,7 @@ class WandbLogger:
             `wandb.Graph` The graph object that will populate after the first backward pass
         """
         if self.wandb_run:
-            self.wandb_run.watch(model, criterion, log, log_freq, idx)
+            return self.wandb_run.watch(model, criterion, log, log_freq, idx)
 
     def check_and_upload_dataset(self, opt: argparse.Namespace = None):
         """

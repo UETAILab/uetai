@@ -1,6 +1,6 @@
 # Init logging object
-import argparse
 import os
+import argparse
 from pathlib import Path
 
 import torch
@@ -25,7 +25,7 @@ class SummaryWriter:
     """
     A custome Logger writes out events, capture run's metadata, version
     weight or dataset artifact and summary to Tensorboard event file
-    (or Weight & Biases's dashboard)
+    (or Weight & Biases's dashboard).
 
     :param opt: option, defaults to None
     :type opt: argparse.Namespace, optional
@@ -34,28 +34,29 @@ class SummaryWriter:
     :type log_dir: str, optional
 
     .. note::
-        The class updates the contents asynchronously. This allows a training program to
-        call methods to add data to the file directly from the training loop, without
-        slowing down training.
+        - The class updates the contents asynchronously. This allows a training
+          program to call methods to add data to the file directly from the training
+          loop, without slowing down training.
 
-    .. tip:: See also
-        <something in here>
-            Callback for doing something
+        - ``SummaryWriter`` automatically detect whether user are having ``wandb`` or
+          not. In the case that user does have ``wandb``, the ``SummaryWriter`` will
+          activate ``wandb`` function and otherwise.
 
-    :examples: .. code:: python
-        >>> # use Tensorboard
+    :examples:
+        .. code::python
         >>> logger = uetai.SummaryWriter(log_dir='demo')
-        Tensorboard: run 'pip install wandb' to automatically track and visualize runs.
+        Tensorboard: run 'pip install wandb' to automatically track \
+and visualize runs.
         Tensorboard: Start with 'tensorboard --logdir {self.log_dir}', \
 view at http://localhost:6006/
 
-        >>> # use Weight & Biases
+        .. code::python
         >>> logger = uetai.SummaryWriter(log_dir='demo')
         wandb: Currently logged in as: user-name \
 (use `wandb login --relogin` to force relogin)
         wandb: Tracking run with wandb version 0.11.2
-        wandb: Syncing run desert-firefly-63
-        wandb: View project at https://wandb.ai/user-name/demo
+        wandb: Syncing run run_name
+        wandb: View project at https://wandb.ai/user-name/demo/runs/run_id
     """
 
     def __init__(self, opt: argparse.Namespace = None, log_dir: str = None,):
@@ -68,7 +69,7 @@ view at http://localhost:6006/
         self.log_prefix = "Weights & Biases: " if self.use_wandb else "Tensorboard: "
         # Message
         if not self.use_wandb:
-            self.log_message(
+            self._log_message(
                 "run 'pip install wandb' to automatically track and visualize runs."
             )
 
@@ -77,7 +78,7 @@ view at http://localhost:6006/
         else:
             self.__init_tensorboard()
 
-    def log_message(self, message: str, prefix: str = None):
+    def _log_message(self, message: str, prefix: str = None,):
         if prefix is None:
             prefix = self.log_prefix
 
@@ -85,11 +86,10 @@ view at http://localhost:6006/
         s = f"{prefix}{message}"
         print(str(s))
 
-    def __init_tensorboard(
-        self,
-    ):
-        self.log_message(
-            f"Start with 'tensorboard --logdir {self.log_dir}', view at http://localhost:6006/"
+    def __init_tensorboard(self,):
+        self._log_message(
+            f"Start with 'tensorboard --logdir {self.log_dir}',"
+            "view at http://localhost:6006/"
         )
         self.tensorboard = TFWriter(str(self.log_dir))
 
@@ -102,27 +102,90 @@ view at http://localhost:6006/
         self.wandb = WandbLogger(self.opt)
 
     def get_logdir(self):
-        """Return directory"""
+        """Get run's name or log_dir.
+
+        :return: run's name (Weight & Biases) or log_dir (Tensorboard)
+        :rtype: str
+
+        :example:
+
+        """
         return self.log_dir
 
     def watch_model(
-        self, model: nn.Module, criterion=None, log="gradients", log_freq=1000, idx=None
+        self,
+        model: nn.Module,
+        criterion: nn.Module = None,
+        log: str = "gradients",
+        log_freq: int = 1000,
+        idx: int = None
     ):
-        if self.use_wandb:
-            self.wandb.watch(model, criterion, log, log_freq, idx)
-        else:
-            self.log_message(
-                "Does not support watch model with Tensorboard, please use wandb"
-            )
+        """Calling Wandb API to track model's weights and biases into W&B dashboard.
 
-    def add_scalar(self, tag: str, scalar_value, global_step=None):
+        :param model: The model to hook, can be a tuple
+        :type model: nn.Module
+        :param criterion: An optional loss value being optimized, defaults to None
+        :type criterion: An optional loss value being optimized, optional
+        :param log: One of "gradients", "parameters", "all", or None, \
+defaults to "gradients"
+        :type log: str, optional
+        :param log_freq: log gradients and parameters every N batches, defaults to 1000
+        :type log_freq: int, optional
+        :param idx: an index to be used when calling `wandb.watch` on multiple models, \
+defaults to None
+        :type idx: [type], optional
+
+        :return:
+        :rtype: `wandb.Graph` or None
+
+        :raises ValueError: If called before `wandb.init` \
+or if any of models is not a torch.nn.Module.
+
+        :example:
+            .. code::python
+                >>> from torchvision.models as models
+                >>> model = models.resnet18()
+                >>> # before training process
+                >>> logger.watch(model=model, log_freq=10)
         """
-        log(
-            data: Dict[str, Any],
-            step: int = None,
-            commit: bool = None,
-            sync: bool = None
-        ) -> None
+        if self.use_wandb:
+            model_graph = self.wandb.watch(model, criterion, log, log_freq, idx)
+            return model_graph
+        self._log_message(
+            "Does not support watch model with Tensorboard, please use W&B"
+        )
+        return None
+
+    def add_scalar(
+        self,
+        tag: str,
+        scalar_value: float,
+        global_step: int = None,
+    ):
+        """Adding scalar data to summary with Tensorboard or logging into W&B
+
+        :param tag: Data identifier
+        :type tag: str
+        :param scalar_value: Scalar from run
+        :type scalar_value: float
+        :param global_step: The global step in processing, defaults to None
+        :type global_step: int, optional
+
+        .. admonition:: See also
+            :class: tip
+
+            **add_scalars**
+
+        :example: .. code:: python
+            >>> # basic usage
+            >>> logger.add_scalar(tag='train/loss', scalar_value=0.5)
+
+            >>> for epoch in range(epochs):
+            >>>     loss = 1/epoch
+            >>>     logger.add_scalar('train/loss',
+            >>>             scalar_value=loss,
+            >>>             global_step=epoch)
+
         """
         if self.use_wandb:
             self.wandb.log({tag: scalar_value}, step=global_step)
@@ -130,18 +193,35 @@ view at http://localhost:6006/
             self.tensorboard.add_scalar(tag, scalar_value, global_step)
 
     def add_scalars(
-        self, main_tag, tag_scalar_dict: dict, global_step=None, walltime=None
+        self,
+        main_tag,
+        tag_scalar_dict: dict,
+        global_step: int = None,
+        walltime: float = None
     ):
-        """
-        Usage:
-            main_tag = 'train'
-            for i in range(10):
-                tag_scalar_dict = {
-                    'loss_cls' = i/10,
-                    'loss_bbox' = i/10,
-                }
-                add_scalars(main_tag, tag_scalar_dict, global_step=i)
+        """Adding scalar data to summary with Tensorboard or logging into W&B
 
+        :param tag: Data identifier
+        :type tag: str
+        :param scalar_value: Scalar from run
+        :type scalar_value: float
+        :param global_step: The global step in processing, defaults to None
+        :type global_step: int, optional
+        :param walltime: Override default walltime (time.time()) seconds \
+after epoch of event
+        :type walltime: float, optional
+
+        .. admonition:: See also
+            :class: tip
+
+            **add_scalar**
+
+        :example: .. code:: python
+            >>> main_tag = 'train'
+            >>> for i in range(10):
+            >>>    tag_scalar_dict = {'loss_cls' = i/10,
+            >>>                     'loss_bbox' = i/10,}
+            >>>    logger.add_scalars(main_tag, tag_scalar_dict, global_step=i)
         """
         if self.use_wandb:
             wb_scalar_dict = {}
@@ -214,7 +294,7 @@ view at http://localhost:6006/
             )
             pass
         else:
-            self.log_message("Does not support upload dataset to Weight & Biases.")
+            self._log_message("Does not support upload dataset to W&B.")
 
     def download_dataset_artifact(
         self, dataset_name: str, version: str, save_path: str = None
@@ -237,8 +317,8 @@ view at http://localhost:6006/
             )
             return dataset_dir, version
         else:
-            self.log_message(
-                "Please enable wandb not support download dataset artifact from Weight & Biases database."
+            self._log_message(
+                "Please enable wandb not support download dataset artifact from W&B."
             )
 
         return None, None
@@ -262,12 +342,12 @@ view at http://localhost:6006/
         if self.use_wandb:
             self.wandb.log_model(path, epoch, scores, opt)
         else:
-            self.log_message(
-                "Does not support upload dataset artifact to Weight & Biases."
+            self._log_message(
+                "Does not support upload dataset artifact to W&B."
             )
 
     def save(self, obj, path: str, epoch: int = None, scores: float or dict = None):
-        """Saving 
+        """Saving
 
         :param obj: [description]
         :type obj: [type]
@@ -295,8 +375,8 @@ view at http://localhost:6006/
         if self.use_wandb:
             self.log_model_artifact(path=path, epoch=epoch, scores=scores)
         else:
-            self.log_message(
-                f"Saved model in {path}. Using `wandb` to upload model into Weight & Biases."
+            self._log_message(
+                f"Saved model in {path}. Using `wandb` to upload model into W&B."
             )
 
     def download_model_artifact(self, artifact_name: str = None, alias: str = None):
@@ -317,8 +397,8 @@ view at http://localhost:6006/
             )
             return artifact_dir, artifact
         else:
-            self.log_message(
-                "Does not support download dataset artifact from Weight & Biases database."
+            self._log_message(
+                "Does not support download dataset artifact from W&B."
             )
 
         return None, None

@@ -1,10 +1,11 @@
 """
-Init logging object
+Init SummaryWriter object
 """
 import os
 import zipfile
 import argparse
 from pathlib import Path
+from typing import Any, Dict
 
 import torch
 from torch import nn
@@ -200,16 +201,16 @@ or if any of models is not a torch.nn.Module.
     def add_scalars(
         self,
         main_tag,
-        tag_scalar_dict: dict,
+        tag_scalar_dict: Dict[str, Any],
         global_step: int = None,
         walltime: float = None
     ):
         """Adding scalar data to summary with Tensorboard or logging into W&B
 
-        :param tag: Data identifier
-        :type tag: str
-        :param scalar_value: Scalar from run
-        :type scalar_value: float
+        :param main_tag: Data identifier
+        :type main_tag: str
+        :param tag_scalar_value: Scalars from run
+        :type tag_scalar_value: Dict[str, Any]
         :param global_step: The global step in processing, defaults to None
         :type global_step: int, optional
         :param walltime: Override default walltime (time.time()) seconds \
@@ -299,26 +300,25 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
                 local_path = str(save_path)
             return local_path
 
-        elif Path(local_path).exists():
+        if Path(local_path).exists():
             # TODO: check whether local_path contains the right version
             return local_path
 
-        elif not Path(local_path).exists():
+        if not Path(local_path).exists():
             if self.use_wandb:
                 if dataset_name is not None:
                     data_path, _ = self.download_dataset_artifact(
                         dataset_name, alias, save_path=local_path)
                     return data_path
 
-        else:
-            raise Exception("Dataset not found.")
+        raise Exception("Dataset not found.")
 
     def log_dataset_artifact(
         self,
         path: str,
         artifact_name: str,
         dataset_type: str = "dataset",
-        dataset_metadata: dict = None,
+        dataset_metadata: Dict[str, Any] = None,
     ):
         """Logging dataset as W&B artifact
 
@@ -329,7 +329,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
         :param dataset_type: Dataset's type, defaults to "dataset"
         :type dataset_type: str, optional
         :param dataset_metadata: Dataset's metadata, defaults to None
-        :type dataset_metadata: dict, optional
+        :type dataset_metadata: Dict[str, Any], optional
 
         :raise Exception: if ``path`` does not exist.
         :return: A W&B dataset artifact
@@ -380,15 +380,14 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
         """
         if self.use_wandb:
             dataset_dir, version = self.wandb.download_dataset_artifact(
-                path=WANDB_ARTIFACT_PREFIX + dataset_name,
+                dataset_name=WANDB_ARTIFACT_PREFIX + dataset_name,
                 alias=version,
                 save_path=save_path,
             )
             return dataset_dir, version
-        else:
-            self._log_message(
-                "Please enable wandb not support download dataset artifact from W&B."
-            )
+        self._log_message(
+            "Please enable wandb not support download dataset artifact from W&B."
+        )
 
         return None, None
 
@@ -396,7 +395,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
         self,
         path: str,
         epoch: int = None,
-        scores: float or dict = None,
+        scores: float or Dict[str, float] = None,
         opt: argparse.Namespace = None,
     ):
         """Logging model weight as W&B artifact
@@ -406,7 +405,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
         :param epoch: Current epoch, defaults to None
         :type epoch: int, optional
         :param scores: Model score(s) in current epoch, defaults to None
-        :type scores: float/dict, optional
+        :type scores: float or Dict[str, float], optional
         :param opt: Comand line arguments to store on artifact, defaults to None
         :type opt: argparse.Namespace, optional
 
@@ -434,7 +433,13 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
         )
         return None
 
-    def save(self, obj, path: str, epoch: int = None, scores: float or dict = None):
+    def save(
+        self,
+        obj,
+        path: str,
+        epoch: int = None,
+        scores: float or Dict[str, float] = None
+    ):
         """Saving model ``state_dict`` and logging into W&B
 
         :param obj: [description]
@@ -444,7 +449,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
         :param epoch: Current epoch, defaults to None
         :type epoch: int, optional
         :param scores: Model score(s) in current epoch, defaults to None
-        :type scores: float/dict, optional
+        :type scores: float or Dict[str, float], optional
 
         .. admonition:: See also
             :class: tip

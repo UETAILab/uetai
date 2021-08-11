@@ -1,3 +1,4 @@
+# pylint: skip-file
 # This file is execfile()d with the current directory set to its containing dir.
 #
 # This file only contains a selection of the most common options. For a full
@@ -80,6 +81,7 @@ extensions = [
     "sphinx.ext.napoleon",
 ]
 
+autosummary_generate = True  # Turn on sphinx.ext.autosummary
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -153,8 +155,9 @@ html_theme = "furo"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "sidebar_width": "300px",
-    "page_width": "1200px"
+    # "sidebar_width": "300px",
+    # "page_width": "1200px",
+    "light_logo": "logo_light.png"
 }
 
 # Add any paths that contain custom themes here, relative to this directory.

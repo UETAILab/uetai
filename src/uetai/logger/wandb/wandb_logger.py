@@ -6,17 +6,17 @@ import argparse
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
-import yaml
+# import yaml
 from torch import nn
 
 try:
     import wandb
 
-    assert hasattr(wandb, '__version__')  # verify package import not local dir
+    assert hasattr(wandb, "__version__")  # verify package import not local dir
 except (ImportError, AssertionError):
     wandb = None
 
-WANDB_ARTIFACT_PREFIX = 'wandb-artifact://'
+WANDB_ARTIFACT_PREFIX = "wandb-artifact://"
 
 
 def remove_prefix(string: str, prefix: str = WANDB_ARTIFACT_PREFIX):
@@ -44,14 +44,15 @@ def get_run_info(run_path):
     run_id = run_path.stem
     project = run_path.parent.stem
     entity = run_path.parent.parent.stem
-    model_artifact_name = 'run_' + run_id + '_model'
+    model_artifact_name = "run_" + run_id + "_model"
     return entity, project, run_id, model_artifact_name
 
 
 def create_dataset_artifact(
-        path: str,
-        dataset_name: str = 'dataset',
-        dataset_type: str = 'dataset',):
+    path: str,
+    dataset_name: str = "dataset",
+    dataset_type: str = "dataset",
+):
     """Create a dataset W&B artifact
 
     :param path: Path to dataset dir/file
@@ -81,8 +82,9 @@ def create_dataset_artifact(
 
 
 def download_model_artifact(
-        model_artifact_name: str = None,
-        alias: str = 'latest',):
+    model_artifact_name: str = None,
+    alias: str = "latest",
+):
     """Download the model checkpoint as W&B artifact
 
     :param model_artifact_name: The name of model that will be downloaded,
@@ -113,6 +115,7 @@ class WandbLogger:
     and basic data metrics and analyses.
 
     """
+
     def __init__(self, opt: argparse.Namespace = None, job_type: str = "Training"):
         """
         Initialize a Wandb runs or resume a previous run to upload dataset
@@ -135,29 +138,37 @@ class WandbLogger:
         self.job_type = job_type
         self.wandb, self.wandb_run = wandb, None if not wandb else wandb.run
 
-        if (isinstance(self.run_id, str) and
-                self.run_id.startswith(WANDB_ARTIFACT_PREFIX)):
+        if isinstance(self.run_id, str) and self.run_id.startswith(
+            WANDB_ARTIFACT_PREFIX
+        ):
             # TODO: resume run
             entity, project, run_id, model_artifact_name = get_run_info(self.run_id)
             self.model_artifact_name = WANDB_ARTIFACT_PREFIX + model_artifact_name
 
-            assert wandb, 'install wandb to resume wandb runs'
+            assert wandb, "install wandb to resume wandb runs"
             # Resume wandb-artifact:// runs
-            self.wandb_run = wandb.init(job_type=job_type,
-                                        id=self.run_id,
-                                        project=opt.project or 'uetai-logger',
-                                        entity=opt.entity or 'uet-ailab',
-                                        resume='allow', )
+            self.wandb_run = wandb.init(
+                job_type=job_type,
+                id=self.run_id,
+                project=opt.project or "uetai-logger",
+                entity=opt.entity or "uet-ailab",
+                resume="allow",
+            )
 
         elif self.wandb:
-            self.wandb_run = wandb.init(config=opt,
-                                        resume="allow",
-                                        project=opt.project or 'uetai-logger',
-                                        entity=opt.entity or 'uet-ailab',
-                                        job_type=job_type,
-                                        id=self.run_id,
-                                        allow_val_change=True,
-                                        ) if not wandb.run else wandb.run
+            self.wandb_run = (
+                wandb.init(
+                    config=opt,
+                    resume="allow",
+                    project=opt.project or "uetai-logger",
+                    entity=opt.entity or "uet-ailab",
+                    job_type=job_type,
+                    id=self.run_id,
+                    allow_val_change=True,
+                )
+                if not wandb.run
+                else wandb.run
+            )
 
     def log(self, log_dict: Dict[str, Any], step: int = None):
         """Log a dict to the global run's history.
@@ -175,6 +186,7 @@ class WandbLogger:
 
         .. admonition:: See also
             :class: tip
+
             <https://docs.wandb.ai/ref/python/log>
         """
         if self.wandb_run:
@@ -186,7 +198,7 @@ class WandbLogger:
         criterion: nn.Module = None,
         log: str = "gradients",
         log_freq: int = 1000,
-        idx: int = None
+        idx: int = None,
     ):
         """Hooks into the torch model to collect gradients and the topology.
 
@@ -204,29 +216,36 @@ class WandbLogger:
         :type idx: int, optional
         :return: The graph object that will populate after the first backward pass
         :rtype: ``wandb.Graph``
+
+        :example:
+            .. code::python
+            >>> model = models.resnet18()
+            >>> wandb_logger.watch(model, log='all', log_freq=10)
+            >>> for epoch in range(epochs):
+            >>>     ...
         """
         if self.wandb_run:
             return self.wandb_run.watch(model, criterion, log, log_freq, idx)
-        raise Exception('Wandb run not found. Please init wandb before call watch')
+        raise Exception("Wandb run not found. Please init wandb before call watch")
 
-    def check_and_upload_dataset(self, opt: argparse.Namespace = None):
-        """
-        Check if the dataset format is compatible and upload it as W&B artifact
+    # def check_and_upload_dataset(self, opt: argparse.Namespace = None):
+    #     """
+    #     Check if the dataset format is compatible and upload it as W&B artifact
 
-        Args:
-            opt (namespace): Commandline arguments for current run
+    #     Args:
+    #         opt (namespace): Commandline arguments for current run
 
-        Returns:
-            Updated dataset info dictionary where local dataset paths are replaced
-              by WAND_ARFACT_PREFIX links.
-        """
-        # TODO: upload dataset by sperate scipt
-        assert wandb, 'Install wandb to upload dataset'
-        config_path = self.log_dataset_artifact(opt.data, opt.project)
-        print("Created dataset config file ", config_path)
-        with open(config_path, encoding='ascii', errors='ignore') as f:
-            wandb_data_dict = yaml.safe_load(f)
-        return wandb_data_dict
+    #     Returns:
+    #         Updated dataset info dictionary where local dataset paths are replaced
+    #           by WAND_ARFACT_PREFIX links.
+    #     """
+    #      # TODO: upload dataset by sperate scipt
+    #     assert wandb, 'Install wandb to upload dataset'
+    #     config_path = self.log_dataset_artifact(opt.data, opt.project)
+    #     print("Created dataset config file ", config_path)
+    #     with open(config_path, encoding='ascii', errors='ignore') as f:
+    #         wandb_data_dict = yaml.safe_load(f)
+    #     return wandb_data_dict
 
     # def setup_training(self, opt: argparse.Namespace = None):
     #     """
@@ -272,7 +291,7 @@ class WandbLogger:
     def download_dataset_artifact(
         self,
         dataset_name: str,
-        alias: str = 'latest',
+        alias: str = "latest",
         save_path: str = None,
     ):
         """Download dataset artifact from W&B
@@ -289,49 +308,61 @@ class WandbLogger:
         """
         if isinstance(dataset_name, str):  # and path.startswith(WANDB_ARTIFACT_PREFIX)
             # artifact_path = remove_prefix(dataset_name, WANDB_ARTIFACT_PREFIX)
-            artifact_path = Path(dataset_name + f':{alias}')
+            artifact_path = Path(dataset_name + f":{alias}")
             dataset_artifact = self.wandb_run.use_artifact(
-                                    artifact_path.as_posix().replace("\\", "/")
-                                    )
+                artifact_path.as_posix().replace("\\", "/")
+            )
             assert dataset_artifact is not None, "W&B dataset artifact does not exist"
             data_dir = dataset_artifact.download(save_path)
             return data_dir, dataset_artifact
         return None, None
 
-    def log_dataset_artifact(self,
-                             path: str,
-                             artifact_name: str,
-                             dataset_type: str = 'dataset',
-                             dataset_metadata: dict = None):
-        """
-        Log the dataset as W&B artifact and return the new data file with W&B links
+    def log_dataset_artifact(
+        self,
+        path: str,
+        artifact_name: str,
+        dataset_type: str = "dataset",
+        dataset_metadata: Dict[str, Any] = None,
+    ):
+        """Log the dataset as W&B artifact
 
-        Args:
-            path (str): Path to dataset artifact dir/file.
-            artifact_name (str): 
-            dataset_type (str): 
+        :param path: Path to dataset artifact dir or file.
+        :type path: str
+        :param artifact_name: Name of logging dataset
+        :type artifact_name: str
+        :param dataset_type: Type of logging dataset, defaults to 'dataset'
+        :type dataset_type: str, optional
+        :param dataset_metadata: Metadata of logging dataset, defaults to None
+        :type dataset_metadata: Dict[str, Any], optional
+        :raises Exception: If dataset path does not exist
+        :return: W&B dataset artifact
+        :rtype: ``wandb.Artifact``
 
-        Example:
-            path = './path/to/dir/or/file'
-            wandb_logger = WandbLogger()
-            wandb_logger.log_dataset_artifact(path, 'raw-mnist', 'dataset')
+        :example:
+            .. code::python
+            >>> path = './path/to/dir/or/file'
+            >>> wandb_logger = WandbLogger()
+            >>> wandb_logger.log_dataset_artifact(path, 'raw-mnist', 'dataset')
         """
         if not Path(path).exists():
-            raise Exception(f'{path} does not exist.')
+            raise Exception(f"{path} does not exist.")
 
-        dataset_artifact = wandb.Artifact(name=artifact_name,
-                                          type=dataset_type,
-                                          metadata=dataset_metadata, )
+        dataset_artifact = wandb.Artifact(
+            name=artifact_name,
+            type=dataset_type,
+            metadata=dataset_metadata,
+        )
         if os.path.isdir(path):
             dataset_artifact.add_dir(path)
         elif os.path.isfile(path):
             dataset_artifact.add_file(path)
-        print('Upload dataset into Weight & Biases.')
+        print("Upload dataset into Weight & Biases.")
         self.wandb_run.log_artifact(dataset_artifact)
         return dataset_artifact
 
     def log_model(
-        self, path: str,
+        self,
+        path: str,
         epoch: int = None,
         scores: float or Dict[str, Any] = None,
         opt: argparse.Namespace = None,
@@ -357,26 +388,28 @@ class WandbLogger:
             >>>     wandb_logger.log_model('weights.pt', epoch, accuracy)
         """
         # TODO: log opt metadata to Wandb run summary
-        metadata = {'project': opt.project,
-                    'total_epochs': opt.epochs} if opt is not None else {}
-        metadata['epochs_trained'] = epoch + 1 if epoch is not None else None
+        metadata = (
+            {"project": opt.project, "total_epochs": opt.epochs}
+            if opt is not None
+            else {}
+        )
+        metadata["epochs_trained"] = epoch + 1 if epoch is not None else None
         if isinstance(scores, float):
-            metadata['scores'] = scores
+            metadata["scores"] = scores
         elif isinstance(scores, dict):
             for key, val in scores.items():
                 metadata[key] = val
         else:
-            metadata['scores'] = None
+            metadata["scores"] = None
 
         model_artifact = wandb.Artifact(
-                                'run_' + self.wandb_run.id + '_model',
-                                type='model',
-                                metadata=metadata)
+            "run_" + self.wandb_run.id + "_model", type="model", metadata=metadata
+        )
         model_artifact.add_file(str(path))
         # logging
-        aliases = ['latest']
+        aliases = ["latest"]
         if epoch is not None:
-            aliases.append('epoch ' + str(epoch + 1))
+            aliases.append("epoch " + str(epoch + 1))
         self.wandb_run.log_artifact(model_artifact, aliases=aliases)
         print(f"Saving model on epoch {epoch} done.")
         return model_artifact

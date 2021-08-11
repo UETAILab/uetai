@@ -63,7 +63,11 @@ view at http://localhost:6006/
         wandb: View project at https://wandb.ai/user-name/demo/runs/run_id
     """
 
-    def __init__(self, opt: argparse.Namespace = None, log_dir: str = None,):
+    def __init__(
+        self,
+        opt: argparse.Namespace = None,
+        log_dir: str = None,
+    ):
         self.log_dir = log_dir
         # self.config     = config # move config to opt (namespace)
         self.opt = opt if opt is not None else None
@@ -82,7 +86,11 @@ view at http://localhost:6006/
         else:
             self.__init_tensorboard()
 
-    def _log_message(self, message: str, prefix: str = None,):
+    def _log_message(
+        self,
+        message: str,
+        prefix: str = None,
+    ):
         if prefix is None:
             prefix = self.log_prefix
 
@@ -90,7 +98,9 @@ view at http://localhost:6006/
         mess_str = f"{prefix}{message}"
         print(str(mess_str))
 
-    def __init_tensorboard(self,):
+    def __init_tensorboard(
+        self,
+    ):
         self._log_message(
             f"Start with 'tensorboard --logdir {self.log_dir}',"
             "view at http://localhost:6006/"
@@ -122,7 +132,7 @@ view at http://localhost:6006/
         criterion: nn.Module = None,
         log: str = "gradients",
         log_freq: int = 1000,
-        idx: int = None
+        idx: int = None,
     ):
         """Calling Wandb API to track model's weights and biases into W&B dashboard.
 
@@ -203,7 +213,7 @@ or if any of models is not a torch.nn.Module.
         main_tag,
         tag_scalar_dict: Dict[str, Any],
         global_step: int = None,
-        walltime: float = None
+        walltime: float = None,
     ):
         """Adding scalar data to summary with Tensorboard or logging into W&B
 
@@ -242,10 +252,7 @@ after epoch of event
             )
 
     def data_path(
-        self,
-        local_path: str,
-        dataset_name: str = None,
-        alias: str = "latest"
+        self, local_path: str, dataset_name: str = None, alias: str = "latest"
     ):
         """Check local dataset path if user are using Tensorboard, otherwise check W&B
         artifact and download (if need). User can pass url, which starts with "http",
@@ -308,7 +315,8 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
             if self.use_wandb:
                 if dataset_name is not None:
                     data_path, _ = self.download_dataset_artifact(
-                        dataset_name, alias, save_path=local_path)
+                        dataset_name, alias, save_path=local_path
+                    )
                     return data_path
 
         raise Exception("Dataset not found.")
@@ -354,7 +362,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
         return None
 
     def download_dataset_artifact(
-        self, dataset_name: str, version: str = 'latest', save_path: str = None
+        self, dataset_name: str, version: str = "latest", save_path: str = None
     ):
         """Download artifact dataset from W&B
 
@@ -428,9 +436,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
             model_artifact = self.wandb.log_model(path, epoch, scores, opt)
             return model_artifact
 
-        self._log_message(
-            "Does not support upload dataset artifact to W&B."
-        )
+        self._log_message("Does not support upload dataset artifact to W&B.")
         return None
 
     def save(
@@ -438,7 +444,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
         obj,
         path: str,
         epoch: int = None,
-        scores: float or Dict[str, float] = None
+        scores: float or Dict[str, float] = None,
     ):
         """Saving model ``state_dict`` and logging into W&B
 
@@ -483,7 +489,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
                 f"Saved model in {path}. Using `wandb` to upload model into W&B."
             )
 
-    def download_model_artifact(self, artifact_name: str, alias: str = 'latest'):
+    def download_model_artifact(self, artifact_name: str, alias: str = "latest"):
         """Download model artifact from W&b and extract model run's metadata
 
         :param artifact_name: W&B artifact name

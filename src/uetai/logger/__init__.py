@@ -1,5 +1,8 @@
-# Init logging object
+"""
+Init logging object
+"""
 import os
+import zipfile
 import argparse
 from pathlib import Path
 
@@ -83,8 +86,8 @@ view at http://localhost:6006/
             prefix = self.log_prefix
 
         prefix = colorstr(prefix)
-        s = f"{prefix}{message}"
-        print(str(s))
+        mess_str = f"{prefix}{message}"
+        print(str(mess_str))
 
     def __init_tensorboard(self,):
         self._log_message(
@@ -291,14 +294,12 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
             if local_path.endswith(".zip"):  # unzip
                 save_path = root / Path(filename.name[: -len(".zip")])
                 print(f"Unziping {filename} to {save_path}")
-                import zipfile
-
                 with zipfile.ZipFile(filename, "r") as zip_ref:
                     zip_ref.extractall(save_path)
                 local_path = str(save_path)
             return local_path
 
-        if Path(local_path).exists():
+        elif Path(local_path).exists():
             # TODO: check whether local_path contains the right version
             return local_path
 
@@ -495,7 +496,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
         # TODO: extract run's metadata
         if self.use_wandb:
             artifact_dir, artifact = self.wandb.download_model_artifact(
-                path=artifact_name, alias=alias
+                model_artifact_name=artifact_name, alias=alias
             )
             return artifact_dir, artifact
 

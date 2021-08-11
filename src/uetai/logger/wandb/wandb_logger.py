@@ -296,8 +296,8 @@ class WandbLogger:
     ):
         """Download dataset artifact from W&B
 
-        :param path: Dataset artifact name
-        :type path: str
+        :param dataset_name: Dataset artifact name
+        :type dataset_name: str
         :param alias: alias of the artifact to be download, defaults to 'latest'
         :type alias: str, optional
         :param save_path: Path to save the downloaded, defaults to None

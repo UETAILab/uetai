@@ -1,0 +1,12 @@
+[flake8]
+ignore = PAI100, PAI203, PAI201, PAI202, PAI101, F401
+max-line-length = 160
+exclude =
+    .git,
+    __pycache__,
+    docs/conf.py,
+    old,
+    build,
+    dist
+    venv
+max-complexity = 10

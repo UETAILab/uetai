@@ -28,14 +28,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install pylint black flake8
         
-    - name: black, flake8 test
+    - name: Flake8 test
       uses: wearerequired/lint-action@v1
       with:
-        black: true
         flake8: true
-        flake8_args: "--max-line-length=88 --ignore=conf.py"
-        
-#     - name: pep8 test
-#       uses: peter-evans/autopep8@v1
-#       with:
-#         args: --recursive --in-place --aggressive --aggressive .
+        flake8_args: "--max-line-length=160 --ignore=conf.py"
+
+    - name: PEP8 test
+      uses: quentinguidee/pep8-action@v1
+      with:
+        arguments: '--max-line-length=160'

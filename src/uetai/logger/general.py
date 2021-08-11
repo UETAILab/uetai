@@ -87,7 +87,7 @@ def check_dataset(data, autodownload=True):
     # Download (optional)
     extract_dir = ''
     if isinstance(data, (str, Path)) and str(data).endswith('.zip'):  # i.e. gs://bucket/dir/coco128.zip
-        download(data, dir='../datasets', unzip=True, delete=False, curl=False, threads=1)
+        download(data, directory='../datasets', unzip=True, delete=False, curl=False, threads=1)
         data = next((Path('../datasets') / Path(data).stem).rglob('*.yaml'))
         extract_dir, autodownload = data.parent, False
 
@@ -129,39 +129,42 @@ def check_dataset(data, autodownload=True):
     return data  # dictionary
 
 
-def download(url, dir='.', unzip=True, delete=True, curl=False, threads=1):
-    # Multi-threaded file download and unzip function, used in data.yaml for autodownload
-    def download_one(url, dir):
-        # Download 1 file
-        f = dir / Path(url).name  # filename
-        if Path(url).is_file():  # exists in current path
-            Path(url).rename(f)  # move to dir
-        elif not f.exists():
-            print(f'Downloading {url} to {f}...')
-            if curl:
-                os.system(f"curl -L '{url}' -o '{f}' --retry 9 -C -")  # curl download, retry and resume on fail
-            else:
-                torch.hub.download_url_to_file(url, f, progress=True)  # torch download
-        if unzip and f.suffix in ('.zip', '.gz'):
-            print(f'Unzipping {f}...')
-            if f.suffix == '.zip':
-                s = f'unzip -qo {f} -d {dir}'  # unzip -quiet -overwrite
-            elif f.suffix == '.gz':
-                s = f'tar xfz {f} --directory {f.parent}'  # unzip
-            if delete:  # delete zip file after unzip
-                s += f' && rm {f}'
-            os.system(s)
+def download_one_file(single_url, single_dir, curl, unzip, delete):
+    # Download 1 file
+    s = None
+    f = single_dir / Path(single_url).name  # filename
+    if Path(single_url).is_file():  # exists in current path
+        Path(single_url).rename(f)  # move to dir
+    elif not f.exists():
+        print(f'Downloading {single_url} to {f}...')
+        if curl:
+            os.system(f"curl -L '{single_url}' -o '{f}' --retry 9 -C -")  # curl download, retry and resume on fail
+        else:
+            torch.hub.download_url_to_file(single_url, f, progress=True)  # torch download
+    if unzip and f.suffix in ('.zip', '.gz'):
+        print(f'Unzipping {f}...')
+        if f.suffix == '.zip':
+            s = f'unzip -qo {f} -d {dir}'  # unzip -quiet -overwrite
+        elif f.suffix == '.gz':
+            s = f'tar xfz {f} --directory {f.parent}'  # unzip
+        if delete:  # delete zip file after unzip
+            s += f' && rm {f}'
+        os.system(s)
 
-    dir = Path(dir)
-    dir.mkdir(parents=True, exist_ok=True)  # make directory
+
+def download(url, directory='.', unzip=True, delete=True, curl=False, threads=1):
+    # pylint: disable=C901
+    # Multi-threaded file download and unzip function, used in data.yaml for auto download
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)  # make directory
     if threads > 1:
         pool = ThreadPool(threads)
-        pool.imap(lambda x: download_one(*x), zip(url, repeat(dir)))  # multi-threaded
+        pool.imap(lambda x: download_one_file(*x), zip(url, repeat(directory)))  # multi-threaded
         pool.close()
         pool.join()
     else:
         for u in [url] if isinstance(url, (str, Path)) else url:
-            download_one(u, dir)
+            download_one_file(u, directory, curl, unzip, delete)
 
 
 @try_except
@@ -181,7 +184,7 @@ def check_requirements(requirements='requirements.txt', exclude=()):
         try:
             pkg.require(r)
         except Exception as e:  # DistributionNotFound or VersionConflict if requirements not met
-            print(f"{prefix} {r} not found and is required by YOLOv5, attempting auto-update...")
+            print(f"{prefix} {r} {e} not found and is required by YOLOv5, attempting auto-update...")
             try:
                 assert check_online(), f"'pip install {r}' skipped (offline)"
                 print(check_output(f"pip install '{r}'", shell=True).decode())
@@ -196,14 +199,14 @@ def check_requirements(requirements='requirements.txt', exclude=()):
         print(emojis(s))
 
 
-def emojis(str=''):
+def emojis(string=''):
     # Return platform-dependent emoji-safe version of string
-    return str.encode().decode('ascii', 'ignore') if platform.system() == 'Windows' else str
+    return string.encode().decode('ascii', 'ignore') if platform.system() == 'Windows' else string
 
 
-def colorstr(*input):
+def colorstr(*inputs):
     # Colors a string https://en.wikipedia.org/wiki/ANSI_escape_code, i.e.  colorstr('blue', 'hello world')
-    *args, string = input if len(input) > 1 else ('blue', 'bold', input[0])  # color arguments, string
+    *args, string = inputs if len(inputs) > 1 else ('blue', 'bold', inputs[0])  # color arguments, string
     colors = {'black': '\033[30m',  # basic colors
               'red': '\033[31m',
               'green': '\033[32m',

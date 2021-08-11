@@ -34,7 +34,6 @@ jobs:
         black: true
         flake8: true
         flake8_args: "--max-line-length=88 --ignore=conf.py"
-        black_args: "--ignore=conf.py"
         
 #     - name: pep8 test
 #       uses: peter-evans/autopep8@v1

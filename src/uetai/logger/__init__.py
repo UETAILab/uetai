@@ -12,7 +12,7 @@ from torch import nn
 from torch.utils.tensorboard import SummaryWriter as TFWriter
 
 from uetai.logger.general import colorstr
-from uetai.logger.wandb.wandb_logger import WandbLogger
+from uetai.logger.wandb.wandb_logger import WandbLogger, download_model_artifact
 
 try:
     import wandb
@@ -500,7 +500,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
         """
         # TODO: extract run's metadata
         if self.use_wandb:
-            artifact_dir, artifact = self.wandb.download_model_artifact(
+            artifact_dir, artifact = download_model_artifact(
                 model_artifact_name=artifact_name, alias=alias
             )
             return artifact_dir, artifact

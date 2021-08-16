@@ -18,7 +18,6 @@ Note:
 References:
     - https://setuptools.readthedocs.io/en/latest/userguide/entry_point.html
     - https://pip.pypa.io/en/stable/reference/pip_install
-    - https://github.com/UETAI-Chatbot21/uetai
 """
 
 import argparse

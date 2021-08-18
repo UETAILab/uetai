@@ -5,7 +5,7 @@ import os
 import zipfile
 import argparse
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import torch
 from torch import nn
@@ -26,65 +26,100 @@ LOGGER = ("wandb", "tb")
 
 
 class SummaryWriter:
-    """
-    A custome Logger writes out events, capture run's metadata, version
+    """Init a custome Logger to write out events, capture run's metadata, version
     weight or dataset artifact and summary to Tensorboard event file
     (or Weight & Biases's dashboard).
 
-    :param opt: option, defaults to None
-    :type opt: argparse.Namespace, optional
-    :param log_dir: Tensorboard save directotry location or Weight & Biases
-        project's name, defaults to None
-    :type log_dir: str, optional
-
     .. note::
         - The class updates the contents asynchronously. This allows a training
-          program to call methods to add data to the file directly from the training
-          loop, without slowing down training.
+        program to call methods to add data to the file directly from the training
+        loop, without slowing down training.
 
-        - ``SummaryWriter`` automatically detect whether user are having ``wandb`` or
-          not. In the case that user does have ``wandb``, the ``SummaryWriter`` will
-          activate ``wandb`` function and otherwise.
-
-    :examples:
+    .. example::
         .. code::python
         >>> logger = uetai.SummaryWriter(log_dir='demo')
         Tensorboard: run 'pip install wandb' to automatically track \
 and visualize runs.
         Tensorboard: Start with 'tensorboard --logdir {self.log_dir}', \
 view at http://localhost:6006/
-
-        .. code::python
-        >>> logger = uetai.SummaryWriter(log_dir='demo')
-        wandb: Currently logged in as: user-name \
-(use `wandb login --relogin` to force relogin)
-        wandb: Tracking run with wandb version 0.11.2
-        wandb: Syncing run run_name
-        wandb: View project at https://wandb.ai/user-name/demo/runs/run_id
+        >>> for idx in range(100):
+        >>>     logger.add_scalar('loss', idx)
     """
-
     def __init__(
         self,
-        opt: argparse.Namespace = None,
         log_dir: str = None,
+        logger: str or List = None,
+        opt: argparse.Namespace = None,
     ):
+        """
+        Initalize a SummaryWriter object to start write out events, metadata or
+        log artifacts.
+
+        :param log_dir: Tensorboard save directotry location or Weight & Biases
+            project's name, defaults to None
+        :type log_dir: str, optional
+        :param logger: Select logger (Weight & Bias or Tensorboard),
+            must be one of this string 'wandb'; 'tensorboard' or both in a List
+        :type logger: str or List, optional
+        :param opt: option, defaults to None
+        :type opt: argparse.Namespace, optional
+
+        .. note::
+            - ``SummaryWriter`` will automatically decide to logging by 'wandb'
+            or not if the user did not pass any command to `logger` option while
+            initializing. In the case that user does have ``wandb``,
+            the ``SummaryWriter`` will activate ``wandb`` function and otherwise.
+
+        :examples:
+            .. code::python
+            >>> logger = uetai.SummaryWriter(log_dir='demo', logger='tensorboard')
+            Tensorboard: run 'pip install wandb' to automatically track \
+and visualize runs.
+            Tensorboard: Start with 'tensorboard --logdir {self.log_dir}', \
+view at http://localhost:6006/
+
+            .. code::python
+            >>> logger_list = ['tensorboard', 'wandb']
+            >>> logger = uetai.SummaryWriter(log_dir='demo', logger=logger_list)
+            wandb: Currently logged in as: user-name \
+    (use `wandb login --relogin` to force relogin)
+            wandb: Tracking run with wandb version 0.11.2
+            wandb: Syncing run run_name
+            wandb: View project at https://wandb.ai/user-name/demo/runs/run_id
+        """
         self.log_dir = log_dir
         # self.config     = config # move config to opt (namespace)
         self.opt = opt if opt is not None else None
-        self.use_wandb = (wandb is not None) and os.environ.get(
-            "WANDB_API_KEY", None
-        ) is not None
-        self.log_prefix = "Weights & Biases: " if self.use_wandb else "Tensorboard: "
-        # Message
-        if not self.use_wandb:
+        # check selected logger is valid
+        if logger is not None:
+            if isinstance(logger, str):
+                assert logger in ('wandb', 'tensorboard'), f"Logger must \
+be 'wandb' or 'tensorboard', found {logger}"
+                self.logger = 'wandb'
+            elif isinstance(logger, List):
+                raise Exception("We've not supported this feature yet, please\
+try 'wandb' or 'tensorboard'")
+#                 self.logger = []
+#                 for item in logger:
+#                     if item in ('wandb', 'tensorboard'):
+#                         self.logger.append(item)
+#                     else:
+#                         raise Exception(f"Logger must be one of 'wandb' or \
+# 'tensorboard', found {item}")
+        elif logger is None:
+            self.logger = ('wandb' if wandb is not None else 'tensorboard')
+
+        # Init logger
+        if self.logger == 'tensorboard':
             self._log_message(
                 "run 'pip install wandb' to automatically track and visualize runs."
             )
-
-        if self.use_wandb:
-            self.__init_wandb()
-        else:
             self.__init_tensorboard()
+        elif self.logger == 'wandb':
+            self.__init_wandb()
+        # else:
+        #     self.__init_tensorboard()
+        #     self.__init_wandb()
 
     def _log_message(
         self,
@@ -92,7 +127,12 @@ view at http://localhost:6006/
         prefix: str = None,
     ):
         if prefix is None:
-            prefix = self.log_prefix
+            if isinstance(self.logger, str):
+                prefix = (
+                    "Weights & Biases: "
+                    if self.logger == 'wandb' else "Tensorboard: ")
+            else:
+                prefix = "Tensorboard and W&B: "
 
         prefix = colorstr(prefix)
         mess_str = f"{prefix}{message}"
@@ -113,16 +153,13 @@ view at http://localhost:6006/
         # wandb_artifact_resume = isinstance(self.opt.weights, str)
         # and self.opt.weights.startswith(WANDB_ARTIFACT_PREFIX)
         # run_id = self.opt.weights if not wandb_artifact_resume else None
-        self.wandb = WandbLogger(self.opt)
+        self.wandb = WandbLogger(project=self.log_dir)
 
     def get_logdir(self):
         """Get run's name or log_dir.
 
         :return: run's name (Weight & Biases) or log_dir (Tensorboard)
         :rtype: str
-
-        :example:
-
         """
         return self.log_dir
 
@@ -163,7 +200,7 @@ or if any of models is not a torch.nn.Module.
             >>> logger.watch(model=model, log_freq=10)
 
         """
-        if self.use_wandb:
+        if self.logger == 'wandb':
             model_graph = self.wandb.watch(model, criterion, log, log_freq, idx)
             return model_graph
         self._log_message(
@@ -203,7 +240,7 @@ or if any of models is not a torch.nn.Module.
             >>>             global_step=epoch)
 
         """
-        if self.use_wandb:
+        if self.logger == 'wandb':
             self.wandb.log({tag: scalar_value}, step=global_step)
         else:
             self.tensorboard.add_scalar(tag, scalar_value, global_step)
@@ -240,7 +277,7 @@ after epoch of event
             >>>                     'loss_bbox' = i/10,}
             >>>    logger.add_scalars(main_tag, tag_scalar_dict, global_step=i)
         """
-        if self.use_wandb:
+        if self.logger == 'wandb':
             wb_scalar_dict = {}
             for key, value in tag_scalar_dict.items():
                 wb_scalar_dict[str(main_tag + "/" + key)] = value
@@ -281,15 +318,14 @@ after epoch of event
 
             .. code:: python
             >>> # using `data_path` to download dataset by url
-            >>> url = 'https://github.com/manhdung20112000/\
-torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
+            >>> url = 'https://data.deepai.org/mnist.zip'
             >>> data_dir = logger.data_path(url)
 
             .. code:: python
             >>> # download dataset artifact (with W&B)
             >>> data_dir = logger.data_path(
             >>>                 local_path='./datasets/',
-            >>>                 dataset_name='MNIST',
+            >>>                 dataset_name='mnist',
             >>>                 alias='latest')
         """
         if local_path.startswith("http"):
@@ -312,7 +348,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
             return local_path
 
         if not Path(local_path).exists():
-            if self.use_wandb:
+            if self.logger == 'wandb':
                 if dataset_name is not None:
                     data_path, _ = self.download_dataset_artifact(
                         dataset_name, alias, save_path=local_path
@@ -352,7 +388,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
             .. code::python
             >>> logger.log_dataset_artifact('path/to/dataset', 'mnist')
         """
-        if self.use_wandb:
+        if self.logger == 'wandb':
             dataset_artifact = self.wandb.log_dataset_artifact(
                 path, artifact_name, dataset_type, dataset_metadata
             )
@@ -386,7 +422,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
             >>> data_dir, _ = logger.download_dataset_artifact('mnist', 'v1')
 
         """
-        if self.use_wandb:
+        if self.logger == 'wandb':
             dataset_dir, version = self.wandb.download_dataset_artifact(
                 dataset_name=WANDB_ARTIFACT_PREFIX + dataset_name,
                 alias=version,
@@ -432,7 +468,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
             >>>     torch.save(model.state_dict(), 'weight.pt')
             >>>     log_model_artifact('weight.pt', epoch)
         """
-        if self.use_wandb:
+        if self.logger == 'wandb':
             model_artifact = self.wandb.log_model(path, epoch, scores, opt)
             return model_artifact
 
@@ -482,7 +518,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
                     obj[key] = value
         torch.save(obj, path)
 
-        if self.use_wandb:
+        if self.logger == 'wandb':
             self.log_model_artifact(path=path, epoch=epoch, scores=scores)
         else:
             self._log_message(
@@ -505,7 +541,7 @@ torch-simple-logger/releases/download/dataset_v1.0/MNIST.zip'
             **log_model_artifact, log_dataset_artifact, download_dataset_artifact**
         """
         # TODO: extract run's metadata
-        if self.use_wandb:
+        if self.logger == 'wandb':
             artifact_dir, artifact = download_model_artifact(
                 model_artifact_name=artifact_name, alias=alias
             )

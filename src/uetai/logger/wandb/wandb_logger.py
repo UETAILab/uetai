@@ -116,11 +116,24 @@ class WandbLogger:
 
     """
 
-    def __init__(self, opt: argparse.Namespace = None, job_type: str = "Training"):
+    def __init__(
+        self,
+        project: str = None,
+        entity: str = None,
+        run_id: str = None,
+        job_type: str = "Training",
+        # opt: argparse.Namespace = None,
+    ):
         """
         Initialize a Wandb runs or resume a previous run to upload dataset
         (if `opt.upload_dataset` is True) or monitoring training processes.
 
+        :param project: Wandb project name
+        :type project: str, optional
+        :param entity: Wandb entiy
+        :type entity: str, optional
+        :run_id: Wandb pre-defined id for resume run, automatic init a new run
+        if `run_id = None`
         :param opt: Comandline of this run, default to None
         :type opt: argparse.Namespace, optional
         :param job_type: Name of this run, default to Training
@@ -134,7 +147,7 @@ class WandbLogger:
             .. code::python
             >>> wandb_logger = uetai.logger.wandb.WandbLogger()
         """
-        self.run_id = None
+        self.run_id = run_id
         self.job_type = job_type
         self.wandb, self.wandb_run = wandb, None if not wandb else wandb.run
 
@@ -142,26 +155,26 @@ class WandbLogger:
             WANDB_ARTIFACT_PREFIX
         ):
             # TODO: resume run
-            entity, project, run_id, model_artifact_name = get_run_info(self.run_id)
-            self.model_artifact_name = WANDB_ARTIFACT_PREFIX + model_artifact_name
+            # entity, project, run_id, model_artifact_name = get_run_info(self.run_id)
+            # self.model_artifact_name = WANDB_ARTIFACT_PREFIX + model_artifact_name
 
             assert wandb, "install wandb to resume wandb runs"
             # Resume wandb-artifact:// runs
             self.wandb_run = wandb.init(
                 job_type=job_type,
                 id=self.run_id,
-                project=opt.project or "uetai-logger",
-                entity=opt.entity or "uet-ailab",
+                project=project or "uetai-examples",
+                entity=entity or "uet-ailab",
                 resume="allow",
             )
 
         elif self.wandb:
             self.wandb_run = (
                 wandb.init(
-                    config=opt,
+                    # config=opt,
                     resume="allow",
-                    project=opt.project or "uetai-logger",
-                    entity=opt.entity or "uet-ailab",
+                    project=project or "uetai-examples",
+                    entity=entity or "uet-ailab",
                     job_type=job_type,
                     id=self.run_id,
                     allow_val_change=True,
@@ -238,10 +251,10 @@ class WandbLogger:
     #     Returns:
     #         Updated dataset info dictionary where local dataset paths are replaced
     #           by WAND_ARFACT_PREFIX links.
-    #     """
+        """
     #      # TODO: upload dataset by sperate scipt
-    #     assert wandb, 'Install wandb to upload dataset'
-    #     config_path = self.log_dataset_artifact(opt.data, opt.project)
+    #     assert wandb, 'Install wandb to uploadaset'
+    #     config_path = self.log_dataset_artifadata, opt.project)
     #     print("Created dataset config file ", config_path)
     #     with open(config_path, encoding='ascii', errors='ignore') as f:
     #         wandb_data_dict = yaml.safe_load(f)

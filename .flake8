@@ -1,5 +1,5 @@
 [flake8]
-ignore = PAI100, PAI203, PAI201, PAI202, PAI101, F401
+ignore = PAI100, PAI203, PAI201, PAI202, PAI101, F401, F811
 max-line-length = 160
 exclude =
     .git,

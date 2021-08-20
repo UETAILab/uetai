@@ -5,14 +5,21 @@ import os
 import zipfile
 import argparse
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union, Optional
 
 import torch
 from torch import nn
-from torch.utils.tensorboard import SummaryWriter as TFWriter
+
+from pytorch_lightning.loggers.base import rank_zero_experiment
+from pytorch_lightning.utilities import rank_zero_only
+
+from pytorch_lightning.loggers import (
+    WandbLogger,
+    TensorBoardLogger,
+    LightningLoggerBase
+)
 
 from uetai.logger.general import colorstr
-from uetai.logger.wandb.wandb_logger import WandbLogger, download_model_artifact
 
 try:
     import wandb
@@ -22,10 +29,8 @@ try:
 except (ImportError, AssertionError):
     wandb = None
 
-LOGGER = ("wandb", "tb")
 
-
-class SummaryWriter:
+class SummaryWriter(LightningLoggerBase):
     """Init a custome Logger to write out events, capture run's metadata, version
     weight or dataset artifact and summary to Tensorboard event file
     (or Weight & Biases's dashboard).
@@ -45,10 +50,11 @@ view at http://localhost:6006/
         >>> for idx in range(100):
         >>>     logger.add_scalar('loss', idx)
     """
+
     def __init__(
         self,
-        log_dir: str = None,
-        logger: str or List = None,
+        log_dir: Optional[str] = None,
+        log_tool: Optional[str or List] = None,
         opt: argparse.Namespace = None,
     ):
         """
@@ -58,9 +64,9 @@ view at http://localhost:6006/
         :param log_dir: Tensorboard save directotry location or Weight & Biases
             project's name, defaults to None
         :type log_dir: str, optional
-        :param logger: Select logger (Weight & Bias or Tensorboard),
+        :param log_tool: Select logger (Weight & Bias or Tensorboard),
             must be one of this string 'wandb'; 'tensorboard' or both in a List
-        :type logger: str or List, optional
+        :type log_tool: str or List, optional
         :param opt: option, defaults to None
         :type opt: argparse.Namespace, optional
 
@@ -87,16 +93,17 @@ view at http://localhost:6006/
             wandb: Syncing run run_name
             wandb: View project at https://wandb.ai/user-name/demo/runs/run_id
         """
+        super().__init__()
         self.log_dir = log_dir
         # self.config     = config # move config to opt (namespace)
         self.opt = opt if opt is not None else None
         # check selected logger is valid
-        if logger is not None:
-            if isinstance(logger, str):
-                assert logger in ('wandb', 'tensorboard'), f"Logger must \
-be 'wandb' or 'tensorboard', found {logger}"
-                self.logger = 'wandb'
-            elif isinstance(logger, List):
+        if log_tool is not None:
+            if isinstance(log_tool, str):
+                assert log_tool in ('wandb', 'tensorboard'), f"Logger must \
+be 'wandb' or 'tensorboard', found {log_tool}"
+                self.log_tool = 'wandb'
+            elif isinstance(log_tool, List):
                 raise Exception("We've not supported this feature yet, please\
 try 'wandb' or 'tensorboard'")
 #                 self.logger = []
@@ -106,31 +113,28 @@ try 'wandb' or 'tensorboard'")
 #                     else:
 #                         raise Exception(f"Logger must be one of 'wandb' or \
 # 'tensorboard', found {item}")
-        elif logger is None:
-            self.logger = ('wandb' if wandb is not None else 'tensorboard')
+        elif log_tool is None:
+            self.log_tool = ('wandb' if wandb is not None else 'tensorboard')
 
         # Init logger
-        if self.logger == 'tensorboard':
+        if self.log_tool == 'tensorboard':
             self._log_message(
                 "run 'pip install wandb' to automatically track and visualize runs."
             )
             self.__init_tensorboard()
-        elif self.logger == 'wandb':
+        elif self.log_tool == 'wandb':
             self.__init_wandb()
+            self.wandb_run = self.logger._experiment
         # else:
         #     self.__init_tensorboard()
         #     self.__init_wandb()
 
-    def _log_message(
-        self,
-        message: str,
-        prefix: str = None,
-    ):
+    def _log_message(self, message: str, prefix: str = None, ):
         if prefix is None:
-            if isinstance(self.logger, str):
+            if isinstance(self.log_tool, str):
                 prefix = (
                     "Weights & Biases: "
-                    if self.logger == 'wandb' else "Tensorboard: ")
+                    if self.log_tool == 'wandb' else "Tensorboard: ")
             else:
                 prefix = "Tensorboard and W&B: "
 
@@ -138,23 +142,46 @@ try 'wandb' or 'tensorboard'")
         mess_str = f"{prefix}{message}"
         print(str(mess_str))
 
-    def __init_tensorboard(
-        self,
-    ):
+    def __init_tensorboard(self):
         self._log_message(
             f"Start with 'tensorboard --logdir {self.log_dir}',"
             "view at http://localhost:6006/"
         )
-        self.tensorboard = TFWriter(str(self.log_dir))
+        self.logger = TensorBoardLogger(str(self.log_dir))
 
-    def __init_wandb(
-        self,
-    ):
-        # wandb_artifact_resume = isinstance(self.opt.weights, str)
-        # and self.opt.weights.startswith(WANDB_ARTIFACT_PREFIX)
-        # run_id = self.opt.weights if not wandb_artifact_resume else None
-        self.wandb = WandbLogger(project=self.log_dir)
+    def __init_wandb(self):
+        # TODO: resume run
+        self.logger = WandbLogger(str(self.log_dir), log_model=True)
 
+    # Lightning Logger methods =======================================
+    @property
+    @rank_zero_experiment
+    def experiment(self) -> Any:
+        return self.logger.experiment
+
+    def log_metrics(self, metrics: Dict[str, float], step: Optional[int] = None):
+        return self.logger.log_metrics(metrics, step)
+
+    def log_hyperparams(self, params: argparse.Namespace, *args, **kwargs):
+        return self.logger.log_hyperparams(params, *args, **kwargs)
+
+    @property
+    def name(self) -> str:
+        return self.logger.name
+
+    @property
+    def version(self) -> Union[int, str]:
+        return self.logger.version
+
+    @property
+    def save_dir(self) -> Optional[str]:
+        return self.logger.save_dir
+
+    @rank_zero_only
+    def finalize(self, status: str) -> None:
+        self.logger.finalize(status)
+
+    # Custom function ================================================
     def get_logdir(self):
         """Get run's name or log_dir.
 
@@ -163,28 +190,24 @@ try 'wandb' or 'tensorboard'")
         """
         return self.log_dir
 
-    def watch_model(
+    def watch(
         self,
         model: nn.Module,
-        criterion: nn.Module = None,
+        criterion: nn.Module,
         log: str = "gradients",
-        log_freq: int = 1000,
-        idx: int = None,
+        log_freq: int = 100
     ):
         """Calling Wandb API to track model's weights and biases into W&B dashboard.
 
         :param model: The model to hook, can be a tuple
         :type model: nn.Module
         :param criterion: An optional loss value being optimized, defaults to None
-        :type criterion: An optional loss value being optimized, optional
+        :type criterion: nn.Module, optional
         :param log: One of "gradients", "parameters", "all", or None, \
 defaults to "gradients"
         :type log: str, optional
         :param log_freq: log gradients and parameters every N batches, defaults to 1000
         :type log_freq: int, optional
-        :param idx: an index to be used when calling `wandb.watch` on multiple models, \
-defaults to None
-        :type idx: [type], optional
 
         :return: A model histogram of weights and biases
         :rtype: ``wandb.Graph`` or None
@@ -200,92 +223,16 @@ or if any of models is not a torch.nn.Module.
             >>> logger.watch(model=model, log_freq=10)
 
         """
-        if self.logger == 'wandb':
-            model_graph = self.wandb.watch(model, criterion, log, log_freq, idx)
-            return model_graph
-        self._log_message(
-            "Does not support watch model with Tensorboard, please use W&B"
-        )
-        return None
-
-    def add_scalar(
-        self,
-        tag: str,
-        scalar_value: float,
-        global_step: int = None,
-    ):
-        """Adding scalar data to summary with Tensorboard or logging into W&B
-
-        :param tag: Data identifier
-        :type tag: str
-        :param scalar_value: Scalar from run
-        :type scalar_value: float
-        :param global_step: The global step in processing, defaults to None
-        :type global_step: int, optional
-
-        .. admonition:: See also
-            :class: tip
-
-            **add_scalars**
-
-        :example:
-            .. code:: python
-            >>> # basic usage
-            >>> logger.add_scalar(tag='train/loss', scalar_value=0.5)
-
-            >>> for epoch in range(epochs):
-            >>>     loss = 1/epoch
-            >>>     logger.add_scalar('train/loss',
-            >>>             scalar_value=loss,
-            >>>             global_step=epoch)
-
-        """
-        if self.logger == 'wandb':
-            self.wandb.log({tag: scalar_value}, step=global_step)
-        else:
-            self.tensorboard.add_scalar(tag, scalar_value, global_step)
-
-    def add_scalars(
-        self,
-        main_tag,
-        tag_scalar_dict: Dict[str, Any],
-        global_step: int = None,
-        walltime: float = None,
-    ):
-        """Adding scalar data to summary with Tensorboard or logging into W&B
-
-        :param main_tag: Data identifier
-        :type main_tag: str
-        :param tag_scalar_value: Scalars from run
-        :type tag_scalar_value: Dict[str, Any]
-        :param global_step: The global step in processing, defaults to None
-        :type global_step: int, optional
-        :param walltime: Override default walltime (time.time()) seconds \
-after epoch of event
-        :type walltime: float, optional
-
-        .. admonition:: See also
-            :class: tip
-
-            **add_scalar**
-
-        :example:
-            .. code:: python
-            >>> main_tag = 'train'
-            >>> for i in range(10):
-            >>>    tag_scalar_dict = {'loss_cls' = i/10,
-            >>>                     'loss_bbox' = i/10,}
-            >>>    logger.add_scalars(main_tag, tag_scalar_dict, global_step=i)
-        """
-        if self.logger == 'wandb':
-            wb_scalar_dict = {}
-            for key, value in tag_scalar_dict.items():
-                wb_scalar_dict[str(main_tag + "/" + key)] = value
-
-            self.wandb.log(wb_scalar_dict, step=global_step)
-        else:
-            self.tensorboard.add_scalars(
-                main_tag, tag_scalar_dict, global_step, walltime
+        if self.log_tool == 'wandb':
+            self.wandb_run.watch(
+                model=model,
+                criterion=criterion,
+                log=log,
+                log_freq=log_freq
+            )
+        elif self.log_tool == 'tensorboard':
+            self._log_message(
+                "Does not support watch model with Tensorboard, please use W&B"
             )
 
     def data_path(
@@ -348,7 +295,7 @@ after epoch of event
             return local_path
 
         if not Path(local_path).exists():
-            if self.logger == 'wandb':
+            if self.log_tool == 'wandb':
                 if dataset_name is not None:
                     data_path, _ = self.download_dataset_artifact(
                         dataset_name, alias, save_path=local_path
@@ -358,11 +305,11 @@ after epoch of event
         raise Exception("Dataset not found.")
 
     def log_dataset_artifact(
-        self,
-        path: str,
-        artifact_name: str,
-        dataset_type: str = "dataset",
-        dataset_metadata: Dict[str, Any] = None,
+            self,
+            path: str,
+            artifact_name: str,
+            dataset_type: str = "dataset",
+            dataset_metadata: Dict[str, Any] = None,
     ):
         """Logging dataset as W&B artifact
 
@@ -388,8 +335,8 @@ after epoch of event
             .. code::python
             >>> logger.log_dataset_artifact('path/to/dataset', 'mnist')
         """
-        if self.logger == 'wandb':
-            dataset_artifact = self.wandb.log_dataset_artifact(
+        if self.log_tool == 'wandb':
+            dataset_artifact = self._check_and_log_dataset(
                 path, artifact_name, dataset_type, dataset_metadata
             )
             return dataset_artifact
@@ -397,8 +344,51 @@ after epoch of event
         self._log_message("Does not support upload dataset to W&B.")
         return None
 
+    def _check_and_log_dataset(
+        self,
+        path: str,
+        artifact_name: str,
+        dataset_type: str = "dataset",
+        dataset_metadata: Dict[str, Any] = None,
+    ):
+        """Log the dataset as W&B artifact
+
+        :param path: Path to dataset artifact dir or file.
+        :type path: str
+        :param artifact_name: Name of logging dataset
+        :type artifact_name: str
+        :param dataset_type: Type of logging dataset, defaults to 'dataset'
+        :type dataset_type: str, optional
+        :param dataset_metadata: Metadata of logging dataset, defaults to None
+        :type dataset_metadata: Dict[str, Any], optional
+        :raises Exception: If dataset path does not exist
+        :return: W&B dataset artifact
+        :rtype: ``wandb.Artifact``
+
+        :example:
+            .. code::python
+            >>> path = './path/to/dir/or/file'
+            >>> wandb_logger = WandbLogger()
+            >>> wandb_logger.log_dataset_artifact(path, 'raw-mnist', 'dataset')
+        """
+        if not Path(path).exists():
+            raise Exception(f"{path} does not exist.")
+
+        dataset_artifact = wandb.Artifact(
+            name=artifact_name,
+            type=dataset_type,
+            metadata=dataset_metadata,
+        )
+        if os.path.isdir(path):
+            dataset_artifact.add_dir(path)
+        elif os.path.isfile(path):
+            dataset_artifact.add_file(path)
+        print("Upload dataset into Weight & Biases.")
+        self.wandb_run.log_artifact(dataset_artifact)
+        return dataset_artifact
+
     def download_dataset_artifact(
-        self, dataset_name: str, version: str = "latest", save_path: str = None
+            self, dataset_name: str, version: str = "latest", save_path: str = None
     ):
         """Download artifact dataset from W&B
 
@@ -422,8 +412,8 @@ after epoch of event
             >>> data_dir, _ = logger.download_dataset_artifact('mnist', 'v1')
 
         """
-        if self.logger == 'wandb':
-            dataset_dir, version = self.wandb.download_dataset_artifact(
+        if self.log_tool == 'wandb':
+            dataset_dir, version = self._check_and_download_dataset(
                 dataset_name=WANDB_ARTIFACT_PREFIX + dataset_name,
                 alias=version,
                 save_path=save_path,
@@ -435,12 +425,29 @@ after epoch of event
 
         return None, None
 
-    def log_model_artifact(
+    def _check_and_download_dataset(
         self,
-        path: str,
-        epoch: int = None,
-        scores: float or Dict[str, float] = None,
-        opt: argparse.Namespace = None,
+        dataset_name: str,
+        alias: str = "latest",
+        save_path: str = None,
+    ):
+        if isinstance(dataset_name, str):  # and path.startswith(WANDB_ARTIFACT_PREFIX)
+            # artifact_path = remove_prefix(dataset_name, WANDB_ARTIFACT_PREFIX)
+            artifact_path = Path(dataset_name + f":{alias}")
+            dataset_artifact = self.wandb_run.use_artifact(
+                artifact_path.as_posix().replace("\\", "/")
+            )
+            assert dataset_artifact is not None, "W&B dataset artifact does not exist"
+            data_dir = dataset_artifact.download(save_path)
+            return data_dir, dataset_artifact
+        return None, None
+
+    def log_model_artifact(
+            self,
+            path: str,
+            epoch: int = None,
+            scores: float or Dict[str, float] = None,
+            opt: argparse.Namespace = None,
     ):
         """Logging model weight as W&B artifact
 
@@ -468,19 +475,73 @@ after epoch of event
             >>>     torch.save(model.state_dict(), 'weight.pt')
             >>>     log_model_artifact('weight.pt', epoch)
         """
-        if self.logger == 'wandb':
-            model_artifact = self.wandb.log_model(path, epoch, scores, opt)
+        if self.log_tool == 'wandb':
+            model_artifact = self._log_model(path, epoch, scores, opt)
             return model_artifact
 
         self._log_message("Does not support upload dataset artifact to W&B.")
         return None
 
-    def save(
+    def _log_model(
         self,
-        obj,
         path: str,
         epoch: int = None,
-        scores: float or Dict[str, float] = None,
+        scores: float or Dict[str, Any] = None,
+        opt: argparse.Namespace = None,
+    ):
+        """Log the model checkpoint as W&B artifact
+
+        :param path: Path to the checkpoint file
+        :type path: str
+        :param epoch: Curren epoch, defaults to None
+        :type epoch: int, optional
+        :param scores: Model epoch score(s), defaults to None
+        :type scores: floatorDict[str, Any], optional
+        :param opt: Comand lien arguments to store on artifact, defaults to None
+        :type opt: argparse.Namespace, optional
+        :return: Model artifact
+        :rtype: ``wandb.Artifact``
+
+        :example:
+            .. code::python
+            >>> for i in range(epochs):
+            >>>     accuracy = i
+            >>>     torch.save(model.state_dict(), 'weights.pt')
+            >>>     wandb_logger.log_model('weights.pt', epoch, accuracy)
+        """
+        # TODO: log opt metadata to Wandb run summary
+        metadata = (
+            {"project": opt.project, "total_epochs": opt.epochs}
+            if opt is not None
+            else {}
+        )
+        metadata["epochs_trained"] = epoch + 1 if epoch is not None else None
+        if isinstance(scores, float):
+            metadata["scores"] = scores
+        elif isinstance(scores, dict):
+            for key, val in scores.items():
+                metadata[key] = val
+        else:
+            metadata["scores"] = None
+
+        model_artifact = wandb.Artifact(
+            "run_" + self.wandb_run.id + "_model", type="model", metadata=metadata
+        )
+        model_artifact.add_file(str(path))
+        # logging
+        aliases = ["latest"]
+        if epoch is not None:
+            aliases.append("epoch " + str(epoch + 1))
+        self.wandb_run.log_artifact(model_artifact, aliases=aliases)
+        print(f"Saving model on epoch {epoch} done.")
+        return model_artifact
+
+    def save_artifact(
+            self,
+            obj,
+            path: str,
+            epoch: int = None,
+            scores: float or Dict[str, float] = None,
     ):
         """Saving model ``state_dict`` and logging into W&B
 
@@ -518,9 +579,9 @@ after epoch of event
                     obj[key] = value
         torch.save(obj, path)
 
-        if self.logger == 'wandb':
+        if self.log_tool == 'wandb':
             self.log_model_artifact(path=path, epoch=epoch, scores=scores)
-        else:
+        elif self.log_tool == 'tensorboard':
             self._log_message(
                 f"Saved model in {path}. Using `wandb` to upload model into W&B."
             )
@@ -541,11 +602,35 @@ after epoch of event
             **log_model_artifact, log_dataset_artifact, download_dataset_artifact**
         """
         # TODO: extract run's metadata
-        if self.logger == 'wandb':
-            artifact_dir, artifact = download_model_artifact(
+        if self.log_tool == 'wandb':
+            artifact_dir, artifact = self._check_and_download_model(
                 model_artifact_name=artifact_name, alias=alias
             )
             return artifact_dir, artifact
 
         self._log_message("Does not support download dataset artifact from W&B.")
+        return None, None
+
+    def _check_and_download_model(
+        self,
+        model_artifact_name: str = None,
+        alias: str = "latest",
+    ):
+        """Download the model checkpoint as W&B artifact
+
+        :param model_artifact_name: The name of model that will be downloaded,
+        defaults to None
+        :type model_artifact_name: str, optional
+        :param alias: Version of the model that will be downloaded,
+        defaults to 'latest'
+        :type alias: str, optional
+        :return: Path to model and ``wandb.Artifact`` corresponds to it
+        :rtype: (str, ``wandb.Artifact``)
+        """
+        if isinstance(model_artifact_name, str):
+            model_artifact = wandb.use_artifact(model_artifact_name + f":{alias}")
+            assert model_artifact is not None, "W&B model artifact doesn not exist"
+            model_dir = model_artifact.download()
+            return model_dir, model_artifact
+
         return None, None

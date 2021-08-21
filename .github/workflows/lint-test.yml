@@ -1,5 +1,5 @@
-# flake8, black, pep8 test
-name: Pylint and coverage test
+# flake8, black, pep8 tests
+name: Pylint and coverage tests
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-    - name: PEP8 test
+    - name: PEP8 tests
       uses: quentinguidee/pep8-action@v1
       with:
         arguments: '--max-line-length=160'
@@ -45,6 +45,6 @@ jobs:
         pytest
         pip install codecov
         pip install pytest-cov
-        pytest --cov=./ --cov-report=xml
+        pytest tests --cov=./ --cov-report=xml
         codecov
 

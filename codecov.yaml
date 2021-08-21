@@ -16,7 +16,7 @@ coverage:
       default: false
       tests:
         paths:
-          - "test/"
+          - "tests/"
         target: 100%
       source:
         paths:

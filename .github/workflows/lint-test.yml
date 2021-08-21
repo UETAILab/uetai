@@ -44,6 +44,6 @@ jobs:
       run: |
         pip install codecov
         pip install pytest-cov
-        pytest tests --cov=./ --cov-report=xml
+        pytest tests --cov=src/ --cov-report=xml
         codecov
 

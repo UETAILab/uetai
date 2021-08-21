@@ -20,7 +20,7 @@ coverage:
         target: 100%
       source:
         paths:
-          - "./"
+          - "sources"
         target: 90%
         threshold: 0.002
     patch:

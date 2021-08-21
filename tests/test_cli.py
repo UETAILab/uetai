@@ -4,4 +4,4 @@ __license__ = "MIT"
 
 
 def test_main():
-    pass
+    assert 1 == 1

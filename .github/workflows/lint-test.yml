@@ -42,6 +42,7 @@ jobs:
 
     - name: Test with pytest
       run: |
+        pip install -e .
         pip install codecov
         pip install pytest-cov
         pytest tests --cov=src/ --cov-report=xml

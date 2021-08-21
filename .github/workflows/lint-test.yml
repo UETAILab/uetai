@@ -13,7 +13,11 @@ jobs:
   run-linters:
     name: Run linters
     runs-on: ubuntu-latest
-    
+    strategy:
+      matrix:
+        python-version: [ 3.6, 3.7 ]
+
+
     steps:
     - name: Check out Git repository
       uses: actions/checkout@v2
@@ -42,6 +46,7 @@ jobs:
 
     - name: Test with pytest
       run: |
+        pip install -e .
         pip install codecov
         pip install pytest-cov
         pytest tests --cov=src/ --cov-report=xml

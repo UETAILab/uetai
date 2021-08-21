@@ -1,5 +1,5 @@
 # flake8, black, pep8 tests
-name: Pylint and coverage tests
+name: Test
 
 on:
   push:

@@ -4,12 +4,11 @@ from uetai.logger import SummaryWriter
 
 
 class TestSummaryWriter(TestCase):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super(TestSummaryWriter, self).__init__(*args, **kwargs)
         self.logger = SummaryWriter("example")
 
     def test_name(self):
-        assert isinstance(self.logger.name, str)
-
-    def test_version(self):
-        assert isinstance(self.logger.version, str)
+        a = self.logger.name
+        if not isinstance(a, str):
+            raise TypeError("type must be string")

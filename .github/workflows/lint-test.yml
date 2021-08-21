@@ -13,7 +13,11 @@ jobs:
   run-linters:
     name: Run linters
     runs-on: ubuntu-latest
-    
+    strategy:
+      matrix:
+        python-version: [ 3.6, 3.7 ]
+
+
     steps:
     - name: Check out Git repository
       uses: actions/checkout@v2

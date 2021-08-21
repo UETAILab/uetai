@@ -30,6 +30,8 @@ def test_artifact_control_function():
 
     # attempt to download latest weight and continues train
     weight_path = download_model_artifact('experiment/model.pth')
+    assert down_path is not None
+    assert weight_path is not None
     pass
 
 

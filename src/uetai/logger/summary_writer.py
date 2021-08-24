@@ -159,7 +159,7 @@ view at http://localhost:6006/
 
             # attempt to install with `pip install wandb`
             install_package('wandb')
-        if self.entity is not None:
+        if self.organization is not None:
             os.environ['WANDB_ENTITY'] = self.organization
         self.logger = WandbLogger(project=str(self.log_dir), log_model=True)
 

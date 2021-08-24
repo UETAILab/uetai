@@ -36,4 +36,4 @@ def test_artifact_control_function():
 
 
 def test_main():
-    pass
+    assert 1 == 1

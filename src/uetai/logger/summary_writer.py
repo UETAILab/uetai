@@ -55,7 +55,7 @@ view at http://localhost:6006/
         self,
         log_dir: Optional[str] = None,
         log_tool: Optional[str or List] = None,
-        organization : Optional[str] = None,
+        organization: Optional[str] = None,
         opt: argparse.Namespace = None,
     ):
         """
@@ -235,7 +235,7 @@ view at http://localhost:6006/
         """
         if self.log_tool == 'wandb':
             self.wandb_run.watch(
-                model=model,
+                models=model,
                 criterion=criterion,
                 log=log,
                 log_freq=log_freq
@@ -320,11 +320,11 @@ view at http://localhost:6006/
             "Dataset not found. Please try using `wandb` to download artifact")
 
     def log_dataset_artifact(
-            self,
-            path: str,
-            artifact_name: str,
-            dataset_type: str = "dataset",
-            dataset_metadata: Dict[str, Any] = None,
+        self,
+        path: str,
+        artifact_name: str,
+        dataset_type: str = "dataset",
+        dataset_metadata: Dict[str, Any] = None,
     ):
         """Logging dataset as W&B artifact
 
@@ -403,7 +403,7 @@ view at http://localhost:6006/
         return dataset_artifact
 
     def download_dataset_artifact(
-            self, dataset_name: str, version: str = "latest", save_path: str = None
+        self, dataset_name: str, version: str = "latest", save_path: str = None
     ):
         """Download artifact dataset from W&B
 
@@ -458,11 +458,11 @@ view at http://localhost:6006/
         return None, None
 
     def log_model_artifact(
-            self,
-            path: str,
-            epoch: int = None,
-            scores: float or Dict[str, float] = None,
-            opt: argparse.Namespace = None,
+        self,
+        path: str,
+        epoch: int = None,
+        scores: float or Dict[str, float] = None,
+        opt: argparse.Namespace = None,
     ):
         """Logging model weight as W&B artifact
 
@@ -551,12 +551,12 @@ view at http://localhost:6006/
         print(f"Saving model on epoch {epoch} done.")
         return model_artifact
 
-    def save_artifact(
-            self,
-            obj,
-            path: str,
-            epoch: int = None,
-            scores: float or Dict[str, float] = None,
+    def save_model(
+        self,
+        obj,
+        path: str,
+        epoch: int = None,
+        scores: float or Dict[str, float] = None,
     ):
         """Saving model ``state_dict`` and logging into W&B
 
@@ -578,7 +578,7 @@ view at http://localhost:6006/
             .. code::python
             >>> # basic usage
             >>> for epoch in range(epochs):
-            >>>     logger.save(model.state_dict, './weight.pt')
+            >>>     logger.save_model(model.state_dict, './weight.pt')
         """
         parent_path = os.path.normpath(os.path.join(path, os.path.pardir))
         if not os.path.exists(parent_path):

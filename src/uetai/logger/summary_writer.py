@@ -55,7 +55,7 @@ view at http://localhost:6006/
         self,
         log_dir: Optional[str] = None,
         log_tool: Optional[str or List] = None,
-        entity: Optional[str] = None,
+        organization : Optional[str] = None,
         opt: argparse.Namespace = None,
     ):
         """
@@ -98,7 +98,7 @@ view at http://localhost:6006/
         """
         super().__init__()
         self.log_dir = log_dir
-        self.entity = entity
+        self.organization = organization
         self.opt = opt if opt is not None else None
 
         # check selected logger is valid
@@ -160,7 +160,7 @@ view at http://localhost:6006/
             # attempt to install with `pip install wandb`
             install_package('wandb')
         if self.entity is not None:
-            os.environ['WANDB_ENTITY'] = self.entity
+            os.environ['WANDB_ENTITY'] = self.organization
         self.logger = WandbLogger(project=str(self.log_dir), log_model=True)
 
     # Lightning Logger methods =======================================

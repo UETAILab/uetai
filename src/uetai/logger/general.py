@@ -86,11 +86,12 @@ def check_online():
     except OSError:
         return False
 
-      
+
 @try_except
 def check_requirements(requirements='requirements.txt', exclude=()):
-    # Check installed dependencies meet requirements
-    # (pass *.txt file or list of packages)
+    """Check installed dependencies meet requirements
+    (pass *.txt file or list of packages)
+    """
     prefix = colorstr('red', 'bold', 'requirements:')
     check_python()  # check python version
     if isinstance(requirements, (str, Path)):  # requirements.txt file

@@ -19,7 +19,7 @@ from pytorch_lightning.loggers import (
     LightningLoggerBase
 )
 
-from uetai.logger.general import colorstr
+from uetai.logger.general import colorstr, install_package
 
 try:
     import wandb
@@ -55,6 +55,7 @@ view at http://localhost:6006/
         self,
         log_dir: Optional[str] = None,
         log_tool: Optional[str or List] = None,
+        entity: Optional[str] = None,
         opt: argparse.Namespace = None,
     ):
         """
@@ -62,10 +63,12 @@ view at http://localhost:6006/
         log artifacts.
 
         :param log_dir: Tensorboard save directotry location or Weight & Biases
-            project's name, defaults to None
+        project's name, defaults to None
         :type log_dir: str, optional
         :param log_tool: Select logger (Weight & Bias or Tensorboard),
-            must be one of this string 'wandb'; 'tensorboard' or both in a List
+        must be one of this string 'wandb'; 'tensorboard' or both in a List
+        :param entity: Log and save artifact in Wandb team, defaults to None
+        :type entity: str, optional
         :type log_tool: str or List, optional
         :param opt: option, defaults to None
         :type opt: argparse.Namespace, optional
@@ -95,24 +98,21 @@ view at http://localhost:6006/
         """
         super().__init__()
         self.log_dir = log_dir
-        # self.config     = config # move config to opt (namespace)
+        self.entity = entity
         self.opt = opt if opt is not None else None
+
         # check selected logger is valid
         if log_tool is not None:
             if isinstance(log_tool, str):
-                assert log_tool in ('wandb', 'tensorboard'), f"Logger must \
-be 'wandb' or 'tensorboard', found {log_tool}"
+                assert log_tool in ('wandb', 'tensorboard'), (
+                    f"Logger must be 'wandb' or 'tensorboard', found {log_tool}")
                 self.log_tool = 'wandb'
             elif isinstance(log_tool, List):
-                raise Exception("We've not supported this feature yet, please\
-try 'wandb' or 'tensorboard'")
-#                 self.logger = []
-#                 for item in logger:
-#                     if item in ('wandb', 'tensorboard'):
-#                         self.logger.append(item)
-#                     else:
-#                         raise Exception(f"Logger must be one of 'wandb' or \
-# 'tensorboard', found {item}")
+                raise Exception(
+                    "We've not supported this feature yet, please"
+                    "try 'wandb' or 'tensorboard'"
+                )
+
         elif log_tool is None:
             self.log_tool = ('wandb' if wandb is not None else 'tensorboard')
 
@@ -124,7 +124,7 @@ try 'wandb' or 'tensorboard'")
             self.__init_tensorboard()
         elif self.log_tool == 'wandb':
             self.__init_wandb()
-            self.wandb_run = self.logger._experiment
+            self.wandb_run = self.logger.experiment
         # else:
         #     self.__init_tensorboard()
         #     self.__init_wandb()
@@ -133,7 +133,7 @@ try 'wandb' or 'tensorboard'")
         if prefix is None:
             if isinstance(self.log_tool, str):
                 prefix = (
-                    "Weights & Biases: "
+                    "wandb: "
                     if self.log_tool == 'wandb' else "Tensorboard: ")
             else:
                 prefix = "Tensorboard and W&B: "
@@ -150,8 +150,18 @@ try 'wandb' or 'tensorboard'")
         self.logger = TensorBoardLogger(str(self.log_dir))
 
     def __init_wandb(self):
-        # TODO: resume run
-        self.logger = WandbLogger(str(self.log_dir), log_model=True)
+        # TODO: extract run name, id -> resume run
+        if wandb is None:
+            self._log_message(
+                "`wandb` is not installed yet, "
+                "trying to install with pip"
+            )
+
+            # attempt to install with `pip install wandb`
+            install_package('wandb')
+        if self.entity is not None:
+            os.environ['WANDB_ENTITY'] = self.entity
+        self.logger = WandbLogger(project=str(self.log_dir), log_model=True)
 
     # Lightning Logger methods =======================================
     @property
@@ -203,8 +213,8 @@ try 'wandb' or 'tensorboard'")
         :type model: nn.Module
         :param criterion: An optional loss value being optimized, defaults to None
         :type criterion: nn.Module, optional
-        :param log: One of "gradients", "parameters", "all", or None, \
-defaults to "gradients"
+        :param log: One of "gradients", "parameters", "all", or None,
+        defaults to "gradients"
         :type log: str, optional
         :param log_freq: log gradients and parameters every N batches, defaults to 1000
         :type log_freq: int, optional
@@ -212,8 +222,8 @@ defaults to "gradients"
         :return: A model histogram of weights and biases
         :rtype: ``wandb.Graph`` or None
 
-        :raises ValueError: If called before `wandb.init` \
-or if any of models is not a torch.nn.Module.
+        :raises ValueError: If called before `wandb.init`
+        or if any of models is not a torch.nn.Module.
 
         :example:
             .. code::python
@@ -236,21 +246,21 @@ or if any of models is not a torch.nn.Module.
             )
 
     def data_path(
-        self, local_path: str, dataset_name: str = None, alias: str = "latest"
+        self, path: str, dataset_name: str = None, alias: str = "latest"
     ):
         """Check local dataset path if user are using Tensorboard, otherwise check W&B
         artifact and download (if need). User can pass url, which starts with "http",
-        to local_path for download it (and unzip if url ends with ".zip")
+        to path for download it (and unzip if url ends with ".zip")
 
-        :param local_path: path to local dataset folder or download url
-        :type local_path: str
+        :param path: path to local dataset folder or download url
+        :type path: str
         :param dataset_name: For download W&B dataset artifact
         :type dataset_name: str, optional
         :param alias: Dataset artifact version, defaults to "latest"
         :type alias: str, optional
 
         :raises Exception: If local path not found or dataset artifact does not exist.
-        :return: Path to dataset (downloaded) folder
+        :return: Path to dataset directory
         :rtype: str
 
         .. admonition:: See also
@@ -271,38 +281,43 @@ or if any of models is not a torch.nn.Module.
             .. code:: python
             >>> # download dataset artifact (with W&B)
             >>> data_dir = logger.data_path(
-            >>>                 local_path='./datasets/',
+            >>>                 path='./datasets/',
             >>>                 dataset_name='mnist',
             >>>                 alias='latest')
         """
-        if local_path.startswith("http"):
+        if path.startswith("http"):
             root = Path("./datasets")
             root.mkdir(parents=True, exist_ok=True)  # create root
-            filename = root / Path(local_path).name
-            print(f"Downloading {local_path} to {filename}")
-            torch.hub.download_url_to_file(local_path, filename)
-            local_path = str(filename)
-            if local_path.endswith(".zip"):  # unzip
+            filename = root / Path(path).name
+            print(f"Downloading {path} to {filename}")
+            torch.hub.download_url_to_file(path, filename)
+            path = str(filename)
+            if path.endswith(".zip"):  # unzip
                 save_path = root / Path(filename.name[: -len(".zip")])
                 print(f"Unziping {filename} to {save_path}")
                 with zipfile.ZipFile(filename, "r") as zip_ref:
                     zip_ref.extractall(save_path)
-                local_path = str(save_path)
-            return local_path
+                path = str(save_path)
+            return path
 
-        if Path(local_path).exists():
-            # TODO: check whether local_path contains the right version
-            return local_path
+        if Path(path).exists():
+            # TODO: check whether `path` contains the right version
+            self._log_message(f"Local path to datasets found, return {path}")
+            return path
 
-        if not Path(local_path).exists():
+        if not Path(path).exists():
             if self.log_tool == 'wandb':
+                self._log_message(
+                    "Local path to datasets not found, "
+                    "attempt to download datasets from `wandb` project")
                 if dataset_name is not None:
-                    data_path, _ = self.download_dataset_artifact(
-                        dataset_name, alias, save_path=local_path
+                    path, _ = self.download_dataset_artifact(
+                        dataset_name, alias, save_path=path
                     )
-                    return data_path
+                    return path
 
-        raise Exception("Dataset not found.")
+        raise Exception(
+            "Dataset not found. Please try using `wandb` to download artifact")
 
     def log_dataset_artifact(
             self,

@@ -97,7 +97,7 @@ view at http://localhost:6006/
         self.logger = TensorBoardLogger(str(self.log_dir))
 
     def __init_wandb(self):
-        self.logger = WandbLogger(str(self.log_dir), log_model=True)
+        self.logger = WandbLogger(str(self.log_dir), log_model=True, entity="uet-ailab")
 
     # Lightning Logger methods
     @property

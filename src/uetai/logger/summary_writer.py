@@ -150,18 +150,7 @@ view at http://localhost:6006/
         self.logger = TensorBoardLogger(str(self.log_dir))
 
     def __init_wandb(self):
-        # TODO: extract run name, id -> resume run
-        if wandb is None:
-            self._log_message(
-                "`wandb` is not installed yet, "
-                "trying to install with pip"
-            )
-
-            # attempt to install with `pip install wandb`
-            install_package('wandb')
-        if self.organization is not None:
-            os.environ['WANDB_ENTITY'] = self.organization
-        self.logger = WandbLogger(project=str(self.log_dir), log_model=True)
+        self.logger = WandbLogger(str(self.log_dir), log_model=True, entity="uet-ailab")
 
     # Lightning Logger methods =======================================
     @property

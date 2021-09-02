@@ -19,7 +19,7 @@ from pytorch_lightning.loggers import (
     LightningLoggerBase
 )
 
-from uetai.logger.general import colorstr, install_package
+from uetai.logger.general import colorstr
 
 try:
     import wandb
@@ -192,7 +192,7 @@ view at http://localhost:6006/
     def watch(
         self,
         model: nn.Module,
-        criterion: nn.Module,
+        criterion: nn.Module = None,
         log: str = "gradients",
         log_freq: int = 100
     ):

@@ -1,5 +1,5 @@
 """image classifier callbacks"""
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 # import torch
 from torch import Tensor
@@ -7,7 +7,7 @@ from pytorch_lightning import Trainer, Callback, LightningModule
 from pytorch_lightning.loggers.base import LightningLoggerBase
 from pytorch_lightning.utilities.warnings import rank_zero_warn
 
-from summary_writer import SummaryWriter
+from uetai.logger import SummaryWriter
 
 try:
     import wandb
@@ -18,7 +18,7 @@ except (ImportError, AssertionError):
 class ImageMonitorBase(Callback):
     """Base class for monitoring image data in a LightningModule.
     """
-    def __init__(self, log_every_n_steps: int = None):
+    def __init__(self, log_every_n_steps: int = 20):
         super().__init__()
         self._log_ever_n_steps: Optional[int] = log_every_n_steps
         self._trainer = Trainer
@@ -32,13 +32,35 @@ class ImageMonitorBase(Callback):
         self._log_ever_n_steps = self._log_ever_n_steps or trainer.log_every_n_steps
         self._trainer = trainer
 
-    def on_train_batch_start(
-        self, trainer: Trainer, pl_module: LightningModule,
-        batch: Any, batch_idx: int, dataloader_idx: int
+    def on_train_batch_end(
+        self, trainer: Trainer,
+        pl_module: LightningModule,
+        outputs: Any,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int
     ) -> None:
-        self._train_batch_idx = batch_idx
+        # log every n steps
+        if (batch_idx + 1) % self._log_ever_n_steps != 0:
+            return
 
-    def log_image(self, batch: Any, tag: str = None,):
+        named_tensor: Dict[str, Tensor] = {}
+        tensor, gt, _ = batch  # tensor, label, batch_size
+        if isinstance(outputs, Dict):
+            pred = outputs['pred']
+        elif isinstance(outputs, List):
+            pred = outputs
+
+        # TODO: this is classification task, it'll be moved to another callback soon
+        for predict, idx in enumerate(pred):
+            # convert each tensor from [batch, w, h] -> [w, h, batch]
+            image = tensor[idx].permute(1,2,0)
+            named_tensor[str(predict)] = image
+        self.add_image(tag='train/media', batch=named_tensor)
+
+    def add_image(
+        self, batch: Dict[str, Tensor], tag: str = None,
+    ) -> None:
         """Log image(s) to Weight & Biases dashboard.
 
         :param batch: The image or group of images
@@ -55,13 +77,15 @@ class ImageMonitorBase(Callback):
         if tag is None:
             tag = 'Media'
         if isinstance(batch, Tensor):
-            self.__log_image(tag=tag, tensor=batch)
+            self.__add_image(tag=tag, tensor=batch)
 
-        if isinstance(batch, Dict[str, Tensor]):
+        if isinstance(batch, Dict):
             for name, tensor in batch.items():
-                self.__log_image(tag=tag, tensor=tensor, name=name)
+                self.__add_image(tag=tag, tensor=tensor, name=name, step=step)
 
-    def __log_image(self, tag: str, tensor: Tensor, name: str = None) -> None:
+    def __add_image(
+        self, tag: str, tensor: Tensor, name: str = None,
+    ) -> None:
         """Override this method to customize the logging of Image.
 
         :param image: The tensor for which to log as image
@@ -74,11 +98,11 @@ class ImageMonitorBase(Callback):
                 "To log image with `wandb`, please it install with `pip install wandb`"
             )
         logger = self._trainer.logger
-        tensor = tensor.detach().cpu()
+        tensor = tensor.detach().cpu().numpy()
 
-        logger.experiment.log({
-            f"{tag}": wandb.Image(tensor, caption=name)
-        })
+        logger.experiment.log(
+            {tag: wandb.Image(tensor, caption=name)},
+        )
 
     def _check_logger(self, logger: LightningLoggerBase) -> bool:
         available = True

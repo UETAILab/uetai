@@ -2,7 +2,7 @@
 from typing import Any, Dict, List, Optional
 
 # import torch
-from torch import Tensor
+from torchvision import transforms
 from pytorch_lightning import Trainer, Callback, LightningModule
 from pytorch_lightning.loggers.base import LightningLoggerBase
 from pytorch_lightning.utilities.warnings import rank_zero_warn
@@ -18,12 +18,15 @@ except (ImportError, AssertionError):
 class ImageMonitorBase(Callback):
     """Base class for monitoring image data in a LightningModule.
     """
-    def __init__(self, log_every_n_steps: int = 20):
+    def __init__(
+        self, log_every_n_steps: int = 20, label_mapping: Dict[int, str] = None
+    ):
         super().__init__()
         self._log_ever_n_steps: Optional[int] = log_every_n_steps
         self._trainer = Trainer
         self._train_batch_idx: int
         self._log = False
+        self._mapping = label_mapping
 
     def on_train_start(
         self, trainer: Trainer, pl_module: LightningModule
@@ -44,7 +47,7 @@ class ImageMonitorBase(Callback):
         if (batch_idx + 1) % self._log_ever_n_steps != 0:
             return
 
-        named_tensor: Dict[str, Tensor] = {}
+        named_tensor: List = []
         tensor, gt, _ = batch  # tensor, label, batch_size
         if isinstance(outputs, Dict):
             pred = outputs['pred']
@@ -52,20 +55,23 @@ class ImageMonitorBase(Callback):
             pred = outputs
 
         # TODO: this is classification task, it'll be moved to another callback soon
-        for predict, idx in enumerate(pred):
-            # convert each tensor from [batch, w, h] -> [w, h, batch]
-            image = tensor[idx].permute(1,2,0)
-            named_tensor[str(predict)] = image
-        self.add_image(tag='train/media', batch=named_tensor)
+        for idx, predict in enumerate(pred):
+            image = transforms.ToPILImage()(tensor[idx]).convert("RGB")
+            if self._mapping is not None:
+                assert predict <= len(self._mapping), (
+                    f"Can't mapping because {predict} doesn't belong to {self._mapping}"
+                )
+                predict = self._mapping[predict.item()]  # mapping label
+            named_tensor.append([str(predict), image])
+        self.add_image(tag='Media/train', batch=named_tensor)
 
     def add_image(
-        self, batch: Dict[str, Tensor], tag: str = None,
+        self, batch: List, tag: str = None,
     ) -> None:
         """Log image(s) to Weight & Biases dashboard.
 
-        :param batch: The image or group of images
-        :type image: torch tensor, or or a collection of it
-        (tuple, list, dict, ...)
+        :param batch: Image or collection of images (List of PIL Image)
+        :type image: List
         :param tag: The tag the images
         :type tag: str, optional
 
@@ -74,40 +80,37 @@ class ImageMonitorBase(Callback):
             >>> buh buh lmao
 
         """
+        images = []
         if tag is None:
             tag = 'Media'
-        if isinstance(batch, Tensor):
-            self.__add_image(tag=tag, tensor=batch)
-
-        if isinstance(batch, Dict):
-            for name, tensor in batch.items():
-                self.__add_image(tag=tag, tensor=tensor, name=name, step=step)
+        for item in batch:
+            # map label's id to name
+            label = item[0]
+            image = item[1]
+            images.append(wandb.Image(image, caption=label))
+        self.__add_image(tag=tag, images=images)
 
     def __add_image(
-        self, tag: str, tensor: Tensor, name: str = None,
+        self, tag: str, images: List or wandb.Image,
     ) -> None:
         """Override this method to customize the logging of Image.
 
-        :param image: The tensor for which to log as image
-        :type image: Tensor
-        :param name: The name of the image or image's class
-        :type name: str, optional
+        :param tag: The name of the logging panel in dashboard
+        :type tag: str
+        :param images: The `wandb.Image` that going to be logging
+        :type images: List
         """
         if wandb is None:
             raise ImportError(
                 "To log image with `wandb`, please it install with `pip install wandb`"
             )
         logger = self._trainer.logger
-        tensor = tensor.detach().cpu().numpy()
-
-        logger.experiment.log(
-            {tag: wandb.Image(tensor, caption=name)},
-        )
+        logger.experiment.log({tag: images})
 
     def _check_logger(self, logger: LightningLoggerBase) -> bool:
         available = True
         if not logger:
-            rank_zero_warn("Cannot log histograms because Trainer has no logger.")
+            rank_zero_warn("Cannot log image because Trainer has no logger.")
             available = False
         if not isinstance(logger, SummaryWriter):
             rank_zero_warn(
@@ -116,5 +119,4 @@ class ImageMonitorBase(Callback):
             )
             available = False
         return available
-
 

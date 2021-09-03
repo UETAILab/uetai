@@ -119,4 +119,3 @@ class ImageMonitorBase(Callback):
             )
             available = False
         return available
-

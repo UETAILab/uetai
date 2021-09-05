@@ -27,8 +27,6 @@ class TestSummaryWriterWandb(TestCase):
         for epoch in range(100):
             logger.save_model(model.state_dict(), 'model.pth')
 
-        # delete current model weight
-
         # attempt to download latest weight and continues train
         weight_path = logger.log_model_artifact('experiment/model.pth')
         assert down_path is not None

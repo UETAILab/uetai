@@ -23,9 +23,10 @@ from uetai.logger.general import colorstr
 
 try:
     import wandb
-
     WANDB_ARTIFACT_PREFIX = "wandb-artifact://"
     assert hasattr(wandb, "__version__")  # verify package import not local dir
+    if os.environ.get("WANDB_API_KEY", None) is None:
+        wandb = None
 except (ImportError, AssertionError):
     wandb = None
 
@@ -322,7 +323,7 @@ view at http://localhost:6006/
     def log_dataset_artifact(
         self,
         path: str,
-        artifact_name: str,
+        dataset_name: str,
         dataset_type: str = "dataset",
         dataset_metadata: Dict[str, Any] = None,
     ):
@@ -330,8 +331,8 @@ view at http://localhost:6006/
 
         :param path: Path to weight local file
         :type path: str
-        :param artifact_name: Dataset artifact name
-        :type artifact_name: str
+        :param dataset_name: Dataset artifact name
+        :type dataset_name: str
         :param dataset_type: Dataset's type, defaults to "dataset"
         :type dataset_type: str, optional
         :param dataset_metadata: Dataset's metadata, defaults to None
@@ -352,7 +353,7 @@ view at http://localhost:6006/
         """
         if self.log_tool == 'wandb':
             dataset_artifact = self._check_and_log_dataset(
-                path, artifact_name, dataset_type, dataset_metadata
+                path, dataset_name, dataset_type, dataset_metadata
             )
             return dataset_artifact
 

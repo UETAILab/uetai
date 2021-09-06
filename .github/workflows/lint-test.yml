@@ -56,7 +56,7 @@ jobs:
         
     - name: Run tests
       run: |
-        pip install -e .
+        pip install -e file://$PWD/
         pip install codecov
         pip install pytest-cov
         pytest tests --cov=src/ --cov-report=xml

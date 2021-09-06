@@ -15,8 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.6, 3.7 ]
-
+        pyversion: [ 3.6, 3.7 ]
 
     steps:
     - name: Check out Git repository
@@ -25,30 +24,40 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: ${{ matrix.pyversion }}
         
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
+        pip install flake8 
+        
+    - name: flake8 test
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-    - name: PEP8 tests
+    - name: PEP8 test
       uses: quentinguidee/pep8-action@v1
       with:
         arguments: '--max-line-length=160'
 
-    - name: Test with pytest
+  cov-test:
+    name: Coverage test
+    runs-on: ubuntu-latest
+
+    steps: 
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip 
+        pip install pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+    - name: Run tests
       run: |
         pip install -e .
         pip install codecov
         pip install pytest-cov
         pytest tests --cov=src/ --cov-report=xml
         codecov
-

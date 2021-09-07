@@ -55,18 +55,32 @@ def test_base_unsupported_logger_warning(tmpdir):
 
 
 @pytest.mark.parametrize('outputs', [
-    dict((key, torch.rand((10, 10))) for key in ('loss', 'pred')),  # Dict
-    torch.rand(10, 10),  # Tensor
-    # TODO: unsupport type
-    # pytest.param(
-    #     torch.rand(10, 10).tolist(),  # List
-    #     pytest.param(E)
-    #     marks=pytest.mark.xfail(exception=Exception)
-    # ),
+    # Dict
+    pytest.param(
+        dict((key, torch.rand((10, 10))) for key in ('loss', 'pred')),
+        id="Dict[str, Tensor]"
+    ),
+    # Tensor
+    pytest.param(
+        torch.rand(10, 10),
+        id="Tensor"
+    ),
+    # unsupported type
+    pytest.param(
+        torch.rand(10, 10).tolist(),  # List
+        marks=pytest.mark.xfail(exception=Exception),
+        id="List"
+    )
 ])
 @pytest.mark.parametrize('tmp_image', [
-    torch.rand(10, 3, 100, 100),
-    # TODO: not an image
+    # normal image (1D - black-white; 2D - LA; 3D - RGB; 4D - RGBA)
+    pytest.param(torch.rand(10, 3, 100, 100), id="Image"),
+    # Not an image (>4D)
+    pytest.param(
+        torch.rand(1, 5, 10, 10),
+        marks=pytest.mark.xfail(exception=ValueError),
+        id="Non_image"
+    )
 ])
 @mock.patch("uetai.callbacks.ImageMonitorBase.add_image")
 def test_training_image_monitor(tmpdir, outputs, tmp_image):

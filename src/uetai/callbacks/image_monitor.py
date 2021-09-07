@@ -1,7 +1,8 @@
 """image classifier callbacks"""
 from typing import Any, Dict, List, Optional
 
-# import torch
+import torch
+from torch import Tensor
 from torchvision import transforms
 from pytorch_lightning import Trainer, Callback, LightningModule
 from pytorch_lightning.loggers.base import LightningLoggerBase
@@ -19,7 +20,7 @@ class ImageMonitorBase(Callback):
     """Base class for monitoring image data in a LightningModule.
     """
     def __init__(
-        self, log_every_n_steps: int = 20, label_mapping: Dict[int, str] = None
+        self, log_every_n_steps: int = None, label_mapping: Dict[int, str] = None
     ):
         super().__init__()
         self._log_every_n_steps: Optional[int] = log_every_n_steps
@@ -51,8 +52,15 @@ class ImageMonitorBase(Callback):
         tensor, gt, _ = batch  # tensor, label, batch_size
         if isinstance(outputs, Dict):
             pred = outputs['pred']
-        elif isinstance(outputs, List):
+        elif isinstance(outputs, Tensor):
             pred = outputs
+        else:
+            raise Exception(
+                f"Except `outputs` to be List or Dict, get {type(outputs)}"
+            )
+
+        # get prediction
+        pred = torch.max(pred.detach(), dim=1)[1]
 
         # this is classification task, it'll be moved to another callback soon
         for idx, predict in enumerate(pred):

@@ -48,7 +48,9 @@ def parse_args(args):
     Returns:
       :obj:`argparse.Namespace`: command line parameters namespace
     """
-    parser = argparse.ArgumentParser(description="CLI, serves a lot of functions of library")
+    parser = argparse.ArgumentParser(
+        description="CLI, serves a lot of functions of library"
+    )
     parser.add_argument(
         "--version",
         action="version",

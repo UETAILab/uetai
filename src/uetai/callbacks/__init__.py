@@ -1,4 +1,4 @@
 """init public callbacks"""
-from .image_classifier import ImageMonitorBase
+from .image_monitor import ImageMonitorBase
 
 __all__ = ["ImageMonitorBase"]

@@ -22,17 +22,17 @@ class ImageMonitorBase(Callback):
         self, log_every_n_steps: int = 20, label_mapping: Dict[int, str] = None
     ):
         super().__init__()
-        self._log_ever_n_steps: Optional[int] = log_every_n_steps
+        self._log_every_n_steps: Optional[int] = log_every_n_steps
+        self._log = False
         self._trainer = Trainer
         self._train_batch_idx: int
-        self._log = False
         self._mapping = label_mapping
 
     def on_train_start(
         self, trainer: Trainer, pl_module: LightningModule
     ) -> None:
         self._log = self._check_logger(trainer.logger)
-        self._log_ever_n_steps = self._log_ever_n_steps or trainer.log_every_n_steps
+        self._log_every_n_steps = self._log_every_n_steps or trainer.log_every_n_steps
         self._trainer = trainer
 
     def on_train_batch_end(
@@ -44,7 +44,7 @@ class ImageMonitorBase(Callback):
         dataloader_idx: int
     ) -> None:
         # log every n steps
-        if (batch_idx + 1) % self._log_ever_n_steps != 0:
+        if not self._log or (batch_idx + 1) % self._log_every_n_steps != 0:
             return
 
         named_tensor: List = []
@@ -54,7 +54,7 @@ class ImageMonitorBase(Callback):
         elif isinstance(outputs, List):
             pred = outputs
 
-        # TODO: this is classification task, it'll be moved to another callback soon
+        # this is classification task, it'll be moved to another callback soon
         for idx, predict in enumerate(pred):
             image = transforms.ToPILImage()(tensor[idx]).convert("RGB")
             if self._mapping is not None:

@@ -1,5 +1,4 @@
 """Image callback ./callbacks/image_monitor testcase"""
-from _pytest import mark
 import pytest
 from unittest import mock
 
@@ -8,7 +7,6 @@ import torch.nn as nn
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers.base import LoggerCollection
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
-from torch.nn.modules.conv import Conv2d
 
 from uetai.callbacks import ImageMonitorBase
 from uetai.logger import SummaryWriter
@@ -40,11 +38,11 @@ def test_base_no_logger_warning():
         monitor.on_train_start(trainer, pl_module=None)
 
 
-def test_base_unsupported_logger_warning(tmpdir):
+def test_base_unsupported_logger_warning():
     """Test passing unsupported logger"""
     logger_collection = LoggerCollection([
-        TensorBoardLogger(save_dir=tmpdir),
-        WandbLogger(name='tmp', save_dir=tmpdir)
+        TensorBoardLogger('tmp'),
+        WandbLogger(name='tmp')
     ])
     monitor = ImageMonitorBase()
     trainer = Trainer(

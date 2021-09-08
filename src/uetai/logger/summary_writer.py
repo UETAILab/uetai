@@ -23,6 +23,7 @@ from uetai.logger.general import colorstr
 
 try:
     import wandb
+    from wandb.sdk.wandb_artifacts import Artifact
     WANDB_ARTIFACT_PREFIX = "wandb-artifact://"
     assert hasattr(wandb, "__version__")  # verify package import not local dir
     if os.environ.get("WANDB_API_KEY", None) is None:
@@ -326,7 +327,7 @@ view at http://localhost:6006/
         dataset_name: str,
         dataset_type: str = "dataset",
         dataset_metadata: Dict[str, Any] = None,
-    ):
+    ) -> Artifact:
         """Logging dataset as W&B artifact
 
         :param path: Path to weight local file
@@ -366,7 +367,7 @@ view at http://localhost:6006/
         artifact_name: str,
         dataset_type: str = "dataset",
         dataset_metadata: Dict[str, Any] = None,
-    ):
+    ) -> Artifact:
         """Log the dataset as W&B artifact
 
         :param path: Path to dataset artifact dir or file.
@@ -399,7 +400,7 @@ view at http://localhost:6006/
             dataset_artifact.add_dir(path)
         elif os.path.isfile(path):
             dataset_artifact.add_file(path)
-        print("Upload dataset into Weight & Biases.")
+        print("Uploading dataset into Weight & Biases.")
         self.wandb_run.log_artifact(dataset_artifact)
         return dataset_artifact
 
@@ -464,7 +465,7 @@ view at http://localhost:6006/
         epoch: int = None,
         scores: float or Dict[str, float] = None,
         opt: argparse.Namespace = None,
-    ):
+    ) -> Artifact:
         """Logging model weight as W&B artifact
 
         :param path: Path to weight local file
@@ -504,7 +505,7 @@ view at http://localhost:6006/
         epoch: int = None,
         scores: float or Dict[str, Any] = None,
         opt: argparse.Namespace = None,
-    ):
+    ) -> Artifact:
         """Log the model checkpoint as W&B artifact
 
         :param path: Path to the checkpoint file
@@ -596,13 +597,17 @@ view at http://localhost:6006/
         torch.save(obj, path)
 
         if self.log_tool == 'wandb':
-            self.log_model_artifact(path=path, epoch=epoch, scores=scores)
+            artifact = self.log_model_artifact(path=path, epoch=epoch, scores=scores)
+            return artifact
         elif self.log_tool == 'tensorboard':
             self._log_message(
                 f"Saved model in {path}. Using `wandb` to upload model into W&B."
             )
+        return None
 
-    def download_model_artifact(self, artifact_name: str, alias: str = "latest"):
+    def download_model_artifact(
+        self, artifact_name: str, alias: str = "latest"
+    ):
         """Download model artifact from W&b and extract model run's metadata
 
         :param artifact_name: W&B artifact name

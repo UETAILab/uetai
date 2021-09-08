@@ -100,10 +100,14 @@ view at http://localhost:6006/
         """
         super().__init__()
         self.project = project
-        self.experiment_name = "experiment" if experiment_name is None else experiment_name
-        self.experiment_name = self.experiment_name + datetime.datetime.now().strftime(" - %d/%m/%Y %H:%M:%S")
+        self.experiment_name = (
+            "experiment" if experiment_name is None else experiment_name
+        )
+        self.experiment_name = (
+            self.experiment_name +
+            datetime.datetime.now().strftime(" - %d/%m/%Y %H:%M:%S")
+        )
         self.organization = organization
-        api = os.environ.get("WANDB_API_KEY")
         self.opt = opt if opt is not None else None
         # check selected logger is valid
         if log_tool is not None:
@@ -119,7 +123,10 @@ view at http://localhost:6006/
 
         elif log_tool is None:
             self.log_tool = (
-                'wandb' if (wandb is not None) and (os.environ.get("WANDB_API_KEY")) is not None else 'tensorboard')
+                'wandb' if (
+                    wandb is not None and os.environ.get("WANDB_API_KEY") is not None
+                ) else 'tensorboard'
+            )
 
         # Init logger
         if self.log_tool == 'tensorboard':
@@ -155,8 +162,12 @@ view at http://localhost:6006/
         self.logger = TensorBoardLogger(str(self.experiment_name))
 
     def __init_wandb(self):
-        self.logger = WandbLogger(name=self.experiment_name, project=str(self.project), log_model=True,
-                                  entity="uet-ailab")
+        self.logger = WandbLogger(
+            name=self.experiment_name,
+            project=str(self.project),
+            log_model=True,
+            entity="uet-ailab"
+        )
 
     # Lightning Logger methods =======================================
     @property

@@ -4,6 +4,7 @@ Init SummaryWriter object
 import os
 import zipfile
 import argparse
+import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Union, Optional
 
@@ -24,10 +25,7 @@ from uetai.logger.general import colorstr
 try:
     import wandb
     from wandb.sdk.wandb_artifacts import Artifact
-    WANDB_ARTIFACT_PREFIX = "wandb-artifact://"
     assert hasattr(wandb, "__version__")  # verify package import not local dir
-    if os.environ.get("WANDB_API_KEY", None) is None:
-        wandb = None
 except (ImportError, AssertionError):
     wandb = None
 
@@ -54,23 +52,25 @@ view at http://localhost:6006/
     """
 
     def __init__(
-        self,
-        log_dir: Optional[str] = None,
-        log_tool: Optional[str or List] = None,
-        organization: Optional[str] = None,
-        opt: argparse.Namespace = None,
+            self,
+            project: str,
+            experiment_name: str = None,
+            organization: Optional[str] = "uet-ailab",
+            log_tool: Optional[str or List] = None,
+
+            opt: argparse.Namespace = None,
     ):
         """
         Initalize a SummaryWriter object to start write out events, metadata or
         log artifacts.
 
-        :param log_dir: Tensorboard save directotry location or Weight & Biases
+        :param experiment_name: Tensorboard save directotry location or Weight & Biases
         project's name, defaults to None
-        :type log_dir: str, optional
+        :type experiment_name: str, optional
         :param log_tool: Select logger (Weight & Bias or Tensorboard),
         must be one of this string 'wandb'; 'tensorboard' or both in a List
-        :param entity: Log and save artifact in Wandb team, defaults to None
-        :type entity: str, optional
+        :param organization: Log and save artifact in Wandb team, defaults to None
+        :type organization: str, optional
         :type log_tool: str or List, optional
         :param opt: option, defaults to None
         :type opt: argparse.Namespace, optional
@@ -99,10 +99,12 @@ view at http://localhost:6006/
             wandb: View project at https://wandb.ai/user-name/demo/runs/run_id
         """
         super().__init__()
-        self.log_dir = log_dir
+        self.project = project
+        self.experiment_name = "experiment" if experiment_name is None else experiment_name
+        self.experiment_name = self.experiment_name + datetime.datetime.now().strftime(" - %d/%m/%Y %H:%M:%S")
         self.organization = organization
+        api = os.environ.get("WANDB_API_KEY")
         self.opt = opt if opt is not None else None
-
         # check selected logger is valid
         if log_tool is not None:
             if isinstance(log_tool, str):
@@ -116,7 +118,8 @@ view at http://localhost:6006/
                 )
 
         elif log_tool is None:
-            self.log_tool = ('wandb' if wandb is not None else 'tensorboard')
+            self.log_tool = (
+                'wandb' if (wandb is not None) and (os.environ.get("WANDB_API_KEY")) is not None else 'tensorboard')
 
         # Init logger
         if self.log_tool == 'tensorboard':
@@ -146,24 +149,14 @@ view at http://localhost:6006/
 
     def __init_tensorboard(self):
         self._log_message(
-            f"Start with 'tensorboard --logdir {self.log_dir}',"
+            f"Start with 'tensorboard --logdir {self.experiment_name}',"
             "view at http://localhost:6006/"
         )
-        self.logger = TensorBoardLogger(str(self.log_dir))
+        self.logger = TensorBoardLogger(str(self.experiment_name))
 
     def __init_wandb(self):
-        # TODO: extract run name, id -> resume run
-        if wandb is None:
-            self._log_message(
-                "`wandb` is not installed yet, "
-                "trying to install with pip"
-            )
-
-            # attempt to install with `pip install wandb`
-            install_package('wandb')
-        if self.organization is not None:
-            os.environ['WANDB_ENTITY'] = self.organization
-        self.logger = WandbLogger(project=str(self.log_dir), log_model=True)
+        self.logger = WandbLogger(name=self.experiment_name, project=str(self.project), log_model=True,
+                                  entity="uet-ailab")
 
     # Lightning Logger methods =======================================
     @property
@@ -200,14 +193,14 @@ view at http://localhost:6006/
         :return: run's name (Weight & Biases) or log_dir (Tensorboard)
         :rtype: str
         """
-        return self.log_dir
+        return self.experiment_name
 
     def watch(
-        self,
-        model: nn.Module,
-        criterion: nn.Module = None,
-        log: str = "gradients",
-        log_freq: int = 100
+            self,
+            model: nn.Module,
+            criterion: nn.Module = None,
+            log: str = "gradients",
+            log_freq: int = 100
     ):
         """Calling Wandb API to track model's weights and biases into W&B dashboard.
 
@@ -248,7 +241,7 @@ view at http://localhost:6006/
             )
 
     def data_path(
-        self, path: str, dataset_name: str = None, alias: str = "latest"
+            self, path: str, dataset_name: str = None, alias: str = "latest"
     ):
         """Check local dataset path if user are using Tensorboard, otherwise check W&B
         artifact and download (if need). User can pass url, which starts with "http",
@@ -322,11 +315,11 @@ view at http://localhost:6006/
             "Dataset not found. Please try using `wandb` to download artifact")
 
     def log_dataset_artifact(
-        self,
-        path: str,
-        dataset_name: str,
-        dataset_type: str = "dataset",
-        dataset_metadata: Dict[str, Any] = None,
+            self,
+            path: str,
+            dataset_name: str,
+            dataset_type: str = "dataset",
+            dataset_metadata: Dict[str, Any] = None,
     ) -> Artifact:
         """Logging dataset as W&B artifact
 
@@ -362,11 +355,11 @@ view at http://localhost:6006/
         return None
 
     def _check_and_log_dataset(
-        self,
-        path: str,
-        artifact_name: str,
-        dataset_type: str = "dataset",
-        dataset_metadata: Dict[str, Any] = None,
+            self,
+            path: str,
+            artifact_name: str,
+            dataset_type: str = "dataset",
+            dataset_metadata: Dict[str, Any] = None,
     ) -> Artifact:
         """Log the dataset as W&B artifact
 
@@ -405,7 +398,7 @@ view at http://localhost:6006/
         return dataset_artifact
 
     def download_dataset_artifact(
-        self, dataset_name: str, version: str = "latest", save_path: str = None
+            self, dataset_name: str, version: str = "latest", save_path: str = None
     ):
         """Download artifact dataset from W&B
 
@@ -431,7 +424,7 @@ view at http://localhost:6006/
         """
         if self.log_tool == 'wandb':
             dataset_dir, version = self._check_and_download_dataset(
-                dataset_name=WANDB_ARTIFACT_PREFIX + dataset_name,
+                dataset_name=dataset_name,
                 alias=version,
                 save_path=save_path,
             )
@@ -443,10 +436,10 @@ view at http://localhost:6006/
         return None, None
 
     def _check_and_download_dataset(
-        self,
-        dataset_name: str,
-        alias: str = "latest",
-        save_path: str = None,
+            self,
+            dataset_name: str,
+            alias: str = "latest",
+            save_path: str = None,
     ):
         if isinstance(dataset_name, str):  # and path.startswith(WANDB_ARTIFACT_PREFIX)
             # artifact_path = remove_prefix(dataset_name, WANDB_ARTIFACT_PREFIX)
@@ -457,201 +450,4 @@ view at http://localhost:6006/
             assert dataset_artifact is not None, "W&B dataset artifact does not exist"
             data_dir = dataset_artifact.download(save_path)
             return data_dir, dataset_artifact
-        return None, None
-
-    def log_model_artifact(
-        self,
-        path: str,
-        epoch: int = None,
-        scores: float or Dict[str, float] = None,
-        opt: argparse.Namespace = None,
-    ) -> Artifact:
-        """Logging model weight as W&B artifact
-
-        :param path: Path to weight local file
-        :type path: str
-        :param epoch: Current epoch, defaults to None
-        :type epoch: int, optional
-        :param scores: Model score(s) in current epoch, defaults to None
-        :type scores: float or Dict[str, float], optional
-        :param opt: Comand line arguments to store on artifact, defaults to None
-        :type opt: argparse.Namespace, optional
-
-        :return: Models' weight as W&B aritfact
-        :rtype: ``wandb.Artifact`` or None
-
-        .. admonition:: See also
-            :class: tip
-
-            **save**
-
-        :example:
-            .. code::python
-            >>> # basic usage
-            >>> for epoch in range(epochs):
-            >>>     torch.save(model.state_dict(), 'weight.pt')
-            >>>     log_model_artifact('weight.pt', epoch)
-        """
-        if self.log_tool == 'wandb':
-            model_artifact = self._log_model(path, epoch, scores, opt)
-            return model_artifact
-
-        self._log_message("Does not support upload dataset artifact to W&B.")
-        return None
-
-    def _log_model(
-        self,
-        path: str,
-        epoch: int = None,
-        scores: float or Dict[str, Any] = None,
-        opt: argparse.Namespace = None,
-    ) -> Artifact:
-        """Log the model checkpoint as W&B artifact
-
-        :param path: Path to the checkpoint file
-        :type path: str
-        :param epoch: Curren epoch, defaults to None
-        :type epoch: int, optional
-        :param scores: Model epoch score(s), defaults to None
-        :type scores: floatorDict[str, Any], optional
-        :param opt: Comand lien arguments to store on artifact, defaults to None
-        :type opt: argparse.Namespace, optional
-        :return: Model artifact
-        :rtype: ``wandb.Artifact``
-
-        :example:
-            .. code::python
-            >>> for i in range(epochs):
-            >>>     accuracy = i
-            >>>     torch.save(model.state_dict(), 'weights.pt')
-            >>>     wandb_logger.log_model('weights.pt', epoch, accuracy)
-        """
-        # TODO: log opt metadata to Wandb run summary
-        metadata = (
-            {"project": opt.project, "total_epochs": opt.epochs}
-            if opt is not None
-            else {}
-        )
-        metadata["epochs_trained"] = epoch + 1 if epoch is not None else None
-        if isinstance(scores, float):
-            metadata["scores"] = scores
-        elif isinstance(scores, dict):
-            for key, val in scores.items():
-                metadata[key] = val
-        else:
-            metadata["scores"] = None
-
-        model_artifact = wandb.Artifact(
-            "run_" + self.wandb_run.id + "_model", type="model", metadata=metadata
-        )
-        model_artifact.add_file(str(path))
-        # logging
-        aliases = ["latest"]
-        if epoch is not None:
-            aliases.append("epoch " + str(epoch + 1))
-        self.wandb_run.log_artifact(model_artifact, aliases=aliases)
-        print(f"Saving model on epoch {epoch} done.")
-        return model_artifact
-
-    def save_model(
-        self,
-        obj,
-        path: str,
-        epoch: int = None,
-        scores: float or Dict[str, float] = None,
-    ):
-        """Saving model ``state_dict`` and logging into W&B
-
-        :param obj: [description]
-        :type obj: nn.Module or list
-        :param path: Save path
-        :type path: str
-        :param epoch: Current epoch, defaults to None
-        :type epoch: int, optional
-        :param scores: Model score(s) in current epoch, defaults to None
-        :type scores: float or Dict[str, float], optional
-
-        .. admonition:: See also
-            :class: tip
-
-            **log_model_artifact**
-
-        :example:
-            .. code::python
-            >>> # basic usage
-            >>> for epoch in range(epochs):
-            >>>     logger.save_model(model.state_dict, './weight.pt')
-        """
-        parent_path = os.path.normpath(os.path.join(path, os.path.pardir))
-        if not os.path.exists(parent_path):
-            os.makedirs(parent_path)
-
-        if epoch is not None:
-            obj["epoch"] = epoch
-        if scores is not None:
-            if isinstance(scores, float):
-                obj["score"] = scores
-            elif isinstance(scores, dict):
-                for key, value in scores.items():
-                    obj[key] = value
-        torch.save(obj, path)
-
-        if self.log_tool == 'wandb':
-            artifact = self.log_model_artifact(path=path, epoch=epoch, scores=scores)
-            return artifact
-        elif self.log_tool == 'tensorboard':
-            self._log_message(
-                f"Saved model in {path}. Using `wandb` to upload model into W&B."
-            )
-        return None
-
-    def download_model_artifact(
-        self, artifact_name: str, alias: str = "latest"
-    ):
-        """Download model artifact from W&b and extract model run's metadata
-
-        :param artifact_name: W&B artifact name
-        :type artifact_name: str
-        :param alias: Artifact version, defaults to latest
-        :type alias: str, optional
-        :return: Artifact path to directory and `wandb.Artifact` object or None, None
-        :rtype: str, wandb.Artifact
-
-        .. admonition:: See also
-            :class: tip
-
-            **log_model_artifact, log_dataset_artifact, download_dataset_artifact**
-        """
-        # TODO: extract run's metadata
-        if self.log_tool == 'wandb':
-            artifact_dir, artifact = self._check_and_download_model(
-                model_artifact_name=artifact_name, alias=alias
-            )
-            return artifact_dir, artifact
-
-        self._log_message("Does not support download dataset artifact from W&B.")
-        return None, None
-
-    def _check_and_download_model(
-        self,
-        model_artifact_name: str = None,
-        alias: str = "latest",
-    ):
-        """Download the model checkpoint as W&B artifact
-
-        :param model_artifact_name: The name of model that will be downloaded,
-        defaults to None
-        :type model_artifact_name: str, optional
-        :param alias: Version of the model that will be downloaded,
-        defaults to 'latest'
-        :type alias: str, optional
-        :return: Path to model and ``wandb.Artifact`` corresponds to it
-        :rtype: (str, ``wandb.Artifact``)
-        """
-        if isinstance(model_artifact_name, str):
-            model_artifact = wandb.use_artifact(model_artifact_name + f":{alias}")
-            assert model_artifact is not None, "W&B model artifact doesn not exist"
-            model_dir = model_artifact.download()
-            return model_dir, model_artifact
-
         return None, None

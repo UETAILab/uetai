@@ -33,11 +33,6 @@ class ImageMonitorBase(Callback):
         self, trainer: Trainer, pl_module: LightningModule
     ) -> None:
         self._log = self._check_logger(trainer.logger)
-        if 'wandb' not in trainer.logger.log_tool:
-            rank_zero_warn(
-                "Current `Summary_Writer` is not running with `wandb`."
-                "Please enable `wandb` to log image"
-            )
         self._log_every_n_steps = self._log_every_n_steps or trainer.log_every_n_steps
         self._trainer = trainer
 
@@ -131,4 +126,10 @@ class ImageMonitorBase(Callback):
                 "support logging with {logger.__class__.__name__}."
             )
             available = False
+        else:
+            if 'wandb' not in logger.log_tool:
+                rank_zero_warn(
+                    "Current `Summary_Writer` is not running with `wandb`."
+                    "Please enable `wandb` to log image"
+                )
         return available

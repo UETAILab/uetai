@@ -28,8 +28,8 @@ class TestSummaryWriterWandb(TestCase):
         shutil.rmtree('./tmp')  # del tmpdir
         assert type(artifact) == Artifact
 
-        down_path, dataset_artifact = self.logger.download_dataset_artifact(dataset_name='dummy-set')
+        down_path, dataset_artifact = self.logger.download_dataset_artifact(
+                                                dataset_name='dummy-set')
         assert type(dataset_artifact) == Artifact
         assert os.path.exists(down_path)
-        assert os.path.exists(os.path.join(down_path, "datapoint.tmp"))
         assert os.path.exists(os.path.join(down_path, "datapoint.tmp"))

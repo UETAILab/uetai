@@ -1,3 +1,4 @@
+from logging import log
 import os
 from unittest import TestCase
 
@@ -10,6 +11,6 @@ class TestSummaryWriter(TestCase):
         logger = SummaryWriter("uetai")
         assert isinstance(logger.logger, WandbLogger)
 
-        os.environ.pop("WANDB_API_KEY", None)
-        logger = SummaryWriter("uetai")
+        # os.environ.pop("WANDB_API_KEY", None)
+        logger = SummaryWriter("uetai", log_tool='tensorboard')
         assert isinstance(logger.logger, TensorBoardLogger)

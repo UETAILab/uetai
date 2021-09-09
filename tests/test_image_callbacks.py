@@ -83,7 +83,7 @@ def test_base_unsupported_logger_warning():
 @mock.patch("uetai.callbacks.ImageMonitorBase.add_image")
 def test_training_image_monitor(tmpdir, outputs, tmp_image):
     monitor = ImageMonitorBase()
-    logger = SummaryWriter("uetai")
+    logger = SummaryWriter("uetai", log_tool='wandb')
     model = nn.Linear(100, 10)  # assume dataset have 10 classes
     trainer = Trainer(
         logger=logger,

@@ -63,6 +63,8 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         
     - name: Run tests
+      env:
+        WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
       run: |
         pip install -e file://$PWD/
         pip install codecov

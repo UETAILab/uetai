@@ -57,7 +57,6 @@ view at http://localhost:6006/
             experiment_name: str = None,
             organization: Optional[str] = "uet-ailab",
             log_tool: Optional[str or List] = None,
-
             opt: argparse.Namespace = None,
     ):
         """
@@ -109,6 +108,7 @@ view at http://localhost:6006/
         )
         self.organization = organization
         self.opt = opt if opt is not None else None
+
         # check selected logger is valid
         if log_tool is not None:
             if isinstance(log_tool, str):
@@ -127,7 +127,6 @@ view at http://localhost:6006/
                     wandb is not None and os.environ.get("WANDB_API_KEY") is not None
                 ) else 'tensorboard'
             )
-
         # Init logger
         if self.log_tool == 'tensorboard':
             self._log_message(
@@ -455,9 +454,8 @@ view at http://localhost:6006/
         if isinstance(dataset_name, str):  # and path.startswith(WANDB_ARTIFACT_PREFIX)
             # artifact_path = remove_prefix(dataset_name, WANDB_ARTIFACT_PREFIX)
             artifact_path = Path(dataset_name + f":{alias}")
-            dataset_artifact = self.wandb_run.use_artifact(
-                artifact_path.as_posix().replace("\\", "/")
-            )
+            artifact_path = artifact_path.as_posix().replace("\\", "/")
+            dataset_artifact = self.wandb_run.use_artifact(artifact_path)
             assert dataset_artifact is not None, "W&B dataset artifact does not exist"
             data_dir = dataset_artifact.download(save_path)
             return data_dir, dataset_artifact

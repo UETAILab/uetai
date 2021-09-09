@@ -15,7 +15,7 @@ from uetai.logger.summary_writer import SummaryWriter
 class TestSummaryWriterWandb(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestSummaryWriterWandb, self).__init__(*args, **kwargs)
-        self.logger = SummaryWriter('uetai')
+        self.logger = SummaryWriter('uetai', log_tool='wandb')
 
     def test_dataset_artifact_upload_download(self):
         # create a (random) dataset

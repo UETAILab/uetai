@@ -35,7 +35,7 @@ jobs:
 
       - name: Run build documents
         run: |
-          pip install tox sphinx-typo3-theme
+          pip install tox sphinx-typo3-theme sphinx
           sphinx-build -b html -d ./docs/_build/doctrees ./docs ./docs/_build/html
 
       - name: Publish to GitHub Pages

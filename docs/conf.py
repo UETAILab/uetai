@@ -70,7 +70,6 @@ except Exception as e:
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     "sphinx.ext.githubpages",
-    "myst_parser",
     'sphinx.ext.viewcode',
     "sphinx_typo3_theme",
     "sphinx.ext.autodoc",

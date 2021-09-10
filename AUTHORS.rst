@@ -2,4 +2,4 @@
 Contributors
 ============
 
-* Nguyen Vaƒn Phi <phinv@vnu.edu.vn>
+* Nguyen Van Phi <phinv@vnu.edu.vn>

@@ -1,6 +1,6 @@
-uetai v0.1
+UETAI v0.1
 ==========
-Welcome, this is the documentation of **uetai** 0.1, last updated |today|.
+Welcome, this is the documentation of **UETAI** 0.0.1, last updated |today|.
 
 .. note::
 
@@ -25,13 +25,15 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
+
 
    Overview <readme>
-   License <license>
+   Module Reference <api/modules>
    Authors <authors>
    Changelog <changelog>
-   Module Reference <api/modules>
+   License <license>
+
 
 
 Indices and tables

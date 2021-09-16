@@ -70,6 +70,17 @@ def check_requirements(requirements='requirements.txt', exclude=()):
             pkg.require(package)
 
         # DistributionNotFound or VersionConflict if requirements not met
+        except Exception as expection:  # pragma: no cover
+            print(
+                f"{prefix} {package} {expection} not found and is required, "
+                "attempting auto-update...")
+            try:
+                assert check_online(), f"'pip install {package}' skipped (offline)"
+                print(check_output(f"pip install '{package}'", shell=True).decode())
+                number_of_package += 1
+            except Exception as expection:
+                print(f'{prefix} {expection}')
+
     if number_of_package:  # if packages updated
         source = file.resolve() if 'file' in locals() else requirements
         string = (
@@ -79,12 +90,14 @@ def check_requirements(requirements='requirements.txt', exclude=()):
             f"{'Restart runtime or rerun command for updates to take effect'}\n")
         print(emojis(string))
 
+
 def emojis(string=''):
     """Return platform-dependent emoji-safe version of string
     """
     if platform.system() == 'Windows':
         return string.encode().decode('ascii', 'ignore')
     return string
+
 
 def colorstr(*inputs):
     """return platform-dependent emoji-safe version of string

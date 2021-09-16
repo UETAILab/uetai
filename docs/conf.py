@@ -69,6 +69,9 @@ except Exception as e:
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
+    "sphinx.ext.githubpages",
+    'sphinx.ext.viewcode',
+    "sphinx_typo3_theme",
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
@@ -86,7 +89,7 @@ autosummary_generate = True  # Turn on sphinx.ext.autosummary
 templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = ".rst"
+source_suffix = ['.rst', '.md']
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -95,7 +98,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "uetai"
+project = "UETAI"
 copyright = "2021, Nguyen Van Phi"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -149,7 +152,7 @@ pygments_style = "sphinx"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "furo"
+html_theme = "sphinx_typo3_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -157,7 +160,7 @@ html_theme = "furo"
 html_theme_options = {
     # "sidebar_width": "300px",
     # "page_width": "1200px",
-    "light_logo": "logo_light.png"
+    "logo": "logo_light.png"
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -248,7 +251,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "user_guide.tex", "uetai Documentation", "Nguyen VÄƒn Phi", "manual")
+    ("index", "user_guide.tex", "UETAI Documentation", "Nguyen Van Phi", "manual")
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

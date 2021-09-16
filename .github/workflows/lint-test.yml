@@ -68,6 +68,6 @@ jobs:
       run: |
         pip install -e file://$PWD/
         pip install codecov
-        pip install pytest-cov
+        pip install pytest-cov parameterized 
         pytest tests --cov=src/ --cov-report=xml
         codecov

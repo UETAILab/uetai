@@ -49,7 +49,7 @@ class ImageMonitorBase(Callback):
             return
 
         named_tensor: List = []
-        tensor, gt, _ = batch  # tensor, label, batch_size
+        tensor, _gt, _ = batch  # tensor, label, batch_size
         if isinstance(outputs, Dict):
             pred = outputs['pred']
         elif isinstance(outputs, Tensor):
@@ -64,7 +64,7 @@ class ImageMonitorBase(Callback):
 
         # this is classification task, it'll be moved to another callback soon
         for idx, predict in enumerate(pred):
-            image = transforms.ToPILImage()(tensor[idx]).convert("RGB")
+            image = transforms.ToPILImage()(tensor[idx])
             if self._mapping is not None:
                 assert predict <= len(self._mapping), (
                     f"Can't mapping because {predict} doesn't belong to {self._mapping}"
@@ -72,6 +72,11 @@ class ImageMonitorBase(Callback):
                 predict = self._mapping[predict.item()]  # mapping label
             named_tensor.append([str(predict), image])
         self.add_image(tag='Media/train', batch=named_tensor)
+
+    def on_fit_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
+        # finish wandb logging if inited
+        if self._log:
+            self._trainer.logger.wandb_run.finish()
 
     def add_image(
         self, batch: List, tag: str = None,
@@ -120,7 +125,7 @@ class ImageMonitorBase(Callback):
         if not logger:
             rank_zero_warn("Cannot log image because Trainer has no logger.")
             available = False
-        if not isinstance(logger, SummaryWriter):
+        elif not isinstance(logger, SummaryWriter):
             rank_zero_warn(
                 f"{self.__class__.__name__} does not "
                 "support logging with {logger.__class__.__name__}."

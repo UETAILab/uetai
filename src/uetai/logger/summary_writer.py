@@ -114,7 +114,7 @@ view at http://localhost:6006/
             if isinstance(log_tool, str):
                 assert log_tool in ('wandb', 'tensorboard'), (
                     f"Logger must be 'wandb' or 'tensorboard', found {log_tool}")
-                self.log_tool = 'wandb'
+                self.log_tool = log_tool
             elif isinstance(log_tool, List):
                 raise Exception(
                     "We've not supported this feature yet, please"

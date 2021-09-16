@@ -21,13 +21,14 @@ class TestImageCallbacks(unittest.TestCase):
     def test_base_log_interval_overide(self,):
         """Test logging interval set by log_every_n_steps argument."""
         for log_every_n_steps in [1, 3, 4]:
+            monitor = ImageMonitorBase()
             trainer = Trainer(
                 callbacks=[self.monitor],
                 log_every_n_steps=log_every_n_steps
             )
             # self.assertEqual(monitor._log_every_n_steps, log_every_n_steps)
-            self.monitor.on_train_start(trainer=trainer, pl_module=None)
-            self.assertEqual(self.monitor._log_every_n_steps, log_every_n_steps)
+            monitor.on_train_start(trainer=trainer, pl_module=None)
+            self.assertEqual(monitor._log_every_n_steps, log_every_n_steps)
 
     @parameterized.expand([
         param(False),
@@ -40,8 +41,7 @@ class TestImageCallbacks(unittest.TestCase):
         trainer = Trainer(
             logger=logger, callbacks=[ImageMonitorBase()]
         )
-        with self.assertWarns(UserWarning):
-            self.monitor.on_train_start(trainer, pl_module=None)
+        self.monitor.on_train_start(trainer, pl_module=None)
 
     @parameterized.expand([
         param(

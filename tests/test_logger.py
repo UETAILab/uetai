@@ -17,4 +17,4 @@ class TestSummaryWriter(TestCase):
 
     def test_un_support_logger_type(self):
         with self.assertRaises(Exception):
-            logger = SummaryWriter("uetai", log_tool="lcoal")
+            logger = SummaryWriter("uetai", log_tool="local")

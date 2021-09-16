@@ -14,3 +14,7 @@ class TestSummaryWriter(TestCase):
         logger = SummaryWriter("uetai")
         os.environ["WANDB_API_KEY"] = api_key
         assert isinstance(logger.logger, TensorBoardLogger)
+
+    def test_un_support_logger_type(self):
+        with self.assertRaises(Exception):
+            logger = SummaryWriter("uetai", log_tool="lcoal")

@@ -99,13 +99,9 @@ view at http://localhost:6006/
         """
         super().__init__()
         self.project = project
-        self.experiment_name = (
-            "experiment" if experiment_name is None else experiment_name
-        )
-        self.experiment_name = (
-            self.experiment_name +
-            datetime.datetime.now().strftime(" - %d/%m/%Y %H:%M:%S")
-        )
+
+        self.experiment_name = "experiment" if experiment_name is None else experiment_name
+        self.experiment_name = self.experiment_name + datetime.datetime.now().strftime(" - %d/%m/%Y %H:%M:%S")
         self.organization = organization
         self.opt = opt if opt is not None else None
 
@@ -116,36 +112,25 @@ view at http://localhost:6006/
                     f"Logger must be 'wandb' or 'tensorboard', found {log_tool}")
                 self.log_tool = log_tool
             elif isinstance(log_tool, List):
-                raise Exception(
-                    "We've not supported this feature yet, please"
-                    "try 'wandb' or 'tensorboard'"
-                )
+                raise Exception("We've not supported this feature yet, please try 'wandb' or 'tensorboard'")
 
         elif log_tool is None:
             self.log_tool = (
-                'wandb' if (
-                    wandb is not None and os.environ.get("WANDB_API_KEY") is not None
-                ) else 'tensorboard'
+                'wandb' if (wandb is not None and os.environ.get("WANDB_API_KEY") is not None)
+                else 'tensorboard'
             )
         # Init logger
         if self.log_tool == 'tensorboard':
-            self._log_message(
-                "run 'pip install wandb' to automatically track and visualize runs."
-            )
+            self._log_message("run 'pip install wandb' to automatically track and visualize runs.")
             self.__init_tensorboard()
         elif self.log_tool == 'wandb':
             self.__init_wandb()
             self.wandb_run = self.logger.experiment
-        # else:
-        #     self.__init_tensorboard()
-        #     self.__init_wandb()
 
     def _log_message(self, message: str, prefix: str = None, ):
         if prefix is None:
             if isinstance(self.log_tool, str):
-                prefix = (
-                    "wandb: "
-                    if self.log_tool == 'wandb' else "Tensorboard: ")
+                prefix = "wandb: " if self.log_tool == 'wandb' else "Tensorboard: "
             else:
                 prefix = "Tensorboard and W&B: "
 
@@ -246,9 +231,7 @@ view at http://localhost:6006/
                 log_freq=log_freq
             )
         elif self.log_tool == 'tensorboard':
-            self._log_message(
-                "Does not support watch model with Tensorboard, please use W&B"
-            )
+            self._log_message("Does not support watch model with Tensorboard, please use W&B")
 
     def data_path(
             self, path: str, dataset_name: str = None, alias: str = "latest"
@@ -321,8 +304,7 @@ view at http://localhost:6006/
                     )
                     return path
 
-        raise Exception(
-            "Dataset not found. Please try using `wandb` to download artifact")
+        raise Exception("Dataset not found. Please try using `wandb` to download artifact")
 
     def log_dataset_artifact(
             self,
@@ -439,10 +421,7 @@ view at http://localhost:6006/
                 save_path=save_path,
             )
             return dataset_dir, version
-        self._log_message(
-            "Please enable wandb not support download dataset artifact from W&B."
-        )
-
+        self._log_message("Please enable wandb not support download dataset artifact from W&B.")
         return None, None
 
     def _check_and_download_dataset(

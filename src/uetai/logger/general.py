@@ -48,6 +48,7 @@ def check_online():
     except OSError:
         return False
 
+
 @try_except
 def check_requirements(requirements='requirements.txt', exclude=()):
     """Check installed dependencies meet requirements

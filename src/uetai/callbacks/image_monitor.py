@@ -70,8 +70,7 @@ class ImageMonitorBase(Callback):
             named_tensor.append([str(predict), image])
         self.add_image(tag='Media/train', batch=named_tensor)
 
-    def on_fit_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
-        # finish wandb logging if inited
+    def finish_run(self, trainer: Trainer = None) -> None:
         if self._log:
             self._trainer.logger.wandb_run.finish()
 

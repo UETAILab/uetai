@@ -59,9 +59,6 @@ class ImageMonitorBase(Callback):
                 f"Except `outputs` to be List or Dict, get {type(outputs)}"
             )
 
-        # get prediction
-        pred = torch.max(pred.detach(), dim=1)[1]
-
         # this is classification task, it'll be moved to another callback soon
         for idx, predict in enumerate(pred):
             image = transforms.ToPILImage()(tensor[idx])

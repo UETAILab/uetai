@@ -312,7 +312,7 @@ view at http://localhost:6006/
             dataset_name: str,
             dataset_type: str = "dataset",
             dataset_metadata: Dict[str, Any] = None,
-    ) -> Artifact:
+    ) -> Any:
         """Logging dataset as W&B artifact
 
         :param path: Path to weight local file
@@ -352,7 +352,7 @@ view at http://localhost:6006/
             artifact_name: str,
             dataset_type: str = "dataset",
             dataset_metadata: Dict[str, Any] = None,
-    ) -> Artifact:
+    ) -> Any:
         """Log the dataset as W&B artifact
 
         :param path: Path to dataset artifact dir or file.

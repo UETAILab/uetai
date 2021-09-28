@@ -17,6 +17,3 @@ torchvision~=0.10.0
 # cov-test =======
 # pytest>=5.3.2
 # parameterized>=0.8.1
-
-# uetai ==========
-uetai~=0.0.post1.dev32+geb00b4b.d20210920

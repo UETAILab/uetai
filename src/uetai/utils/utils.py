@@ -2,7 +2,7 @@
 import os
 import torch
 import gdown
-# import zipfile
+import zipfile
 from pathlib import Path
 from typing import Union
 
@@ -15,8 +15,8 @@ def download_from_url(url: str, save_dir: Union[str, Path] = None) -> str:
     save_dir = save_dir / Path(url).name
     print(f"Downloading {url} to {save_dir}")
     torch.hub.download_url_to_file(url, save_dir)
-    # if save_dir.endswith(".zip"):  # unzip
-    # unzip_file()
+    if str(save_dir).endswith(".zip"):  # unzip
+        save_dir = _unzip_file(path=save_dir)
     return save_dir
 
 
@@ -29,15 +29,17 @@ def download_from_google_drive(id_or_url: str, save_path: Union[str, Path] = Non
             Path(save_path).mkdir(parents=True, exist_ok=True)  # create save dir
     save_path = str(save_path) + str(os.path.sep)
     filename = gdown.download(url=id_or_url, output=save_path, quiet=False)
-    # if 'zip' in filename:
-    #     _unzip_file()
-    #     filename = filename[:-4]  # remove '.zip'
-    return os.path.join(save_path + filename)
+    assert filename is not None, 'Unable to download content, please check your `id` or `url`'
+    if filename.endswith('.zip'):
+        save_path = _unzip_file(filename)
+    return save_path
 
 
-# def _unzip_file(path: Union[str, Path], destination: Union[str, Path]) -> None:
-#     path = path / Path(filename.name[: -len(".zip")])
-#     print(f"Unzipping {filename} to {path}")
-#     with zipfile.ZipFile(filename, "r") as zip_ref:
-#         zip_ref.extractall(path)
-#     url = str(path)
+def _unzip_file(path: Union[str, Path]) -> str:
+    filename = Path(path).name
+    save_path = str(path)[:-len(".zip")]
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    print(f"Unzipping {filename} to {save_path}")
+    with zipfile.ZipFile(path, "r") as zip_ref:
+        zip_ref.extractall(save_path)
+    return str(save_path)

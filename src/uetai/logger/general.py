@@ -1,12 +1,7 @@
-"""uetai utilities"""
-import sys
-import subprocess
-import argparse
 import socket
 import platform
 from pathlib import Path
 from subprocess import check_output
-
 import pkg_resources as pkg
 
 

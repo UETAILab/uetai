@@ -1,4 +1,4 @@
-"""Utilities tests"""
+"""General utilities tests"""
 import os
 from unittest import TestCase
 

@@ -99,11 +99,9 @@ view at http://localhost:6006/
         """
         super().__init__()
         self.project = project
-
-        self.experiment_name = "experiment" if experiment_name is None else experiment_name
+        self.experiment_name = "exp" if experiment_name is None else experiment_name
         self.experiment_name = self.experiment_name + datetime.datetime.now().strftime(" - %d/%m/%Y %H:%M:%S")
         self.organization = organization
-        self.opt = opt if opt is not None else None
 
         # check selected logger is valid
         if log_tool is not None:
@@ -131,26 +129,25 @@ view at http://localhost:6006/
         if prefix is None:
             if isinstance(self.log_tool, str):
                 prefix = "wandb: " if self.log_tool == 'wandb' else "Tensorboard: "
-            else:
-                prefix = "Tensorboard and W&B: "
+            # else: # logging by 2 logger not support yet
+                # prefix = "Tensorboard and W&B: "
 
         prefix = colorstr(prefix)
         mess_str = f"{prefix}{message}"
         print(str(mess_str))
 
     def __init_tensorboard(self):
-        self._log_message(
-            f"Start with 'tensorboard --logdir {self.experiment_name}',"
-            "view at http://localhost:6006/"
-        )
-        self.logger = TensorBoardLogger(str(self.experiment_name))
+        log_dir = str(os.path.join(self.project, self.experiment_name))
+        self._log_message(f"Start with 'tensorboard --logdir {log_dir}', view at http://localhost:6006/")
+        self.logger = TensorBoardLogger(log_dir)
 
     def __init_wandb(self):
+        # TODO: pass id to continuous run
         self.logger = WandbLogger(
             name=self.experiment_name,
-            project=str(self.project),
+            project=self.project,
             log_model=True,
-            entity="uet-ailab"
+            entity=self.organization
         )
 
     # Lightning Logger methods =======================================
@@ -273,21 +270,6 @@ view at http://localhost:6006/
             >>>                 dataset_name='mnist',
             >>>                 alias='latest')
         """
-        if path.startswith("http"):
-            root = Path("./datasets")
-            root.mkdir(parents=True, exist_ok=True)  # create root
-            filename = root / Path(path).name
-            print(f"Downloading {path} to {filename}")
-            torch.hub.download_url_to_file(path, filename)
-            path = str(filename)
-            if path.endswith(".zip"):  # unzip
-                save_path = root / Path(filename.name[: -len(".zip")])
-                print(f"Unziping {filename} to {save_path}")
-                with zipfile.ZipFile(filename, "r") as zip_ref:
-                    zip_ref.extractall(save_path)
-                path = str(save_path)
-            return path
-
         if Path(path).exists():
             # TODO: check whether `path` contains the right version
             self._log_message(f"Local path to datasets found, return {path}")

@@ -18,17 +18,16 @@ class TestImageCallbacks(unittest.TestCase):
         super(TestImageCallbacks, self).__init__(*args, **kwargs)
         self.monitor = ImageMonitorBase()
 
-    def test_base_log_interval_overide(self,):
+    def test_base_log_interval_overide(self, log_every_n_steps=1):
         """Test logging interval set by log_every_n_steps argument."""
-        for log_every_n_steps in [1, 3, 4]:
-            monitor = ImageMonitorBase()
-            trainer = Trainer(
-                callbacks=[self.monitor],
-                log_every_n_steps=log_every_n_steps
-            )
-            # self.assertEqual(monitor._log_every_n_steps, log_every_n_steps)
-            monitor.on_train_start(trainer=trainer, pl_module=None)
-            self.assertEqual(monitor._log_every_n_steps, log_every_n_steps)
+        monitor = ImageMonitorBase()
+        trainer = Trainer(
+            callbacks=[monitor],
+            log_every_n_steps=log_every_n_steps
+        )
+        # self.assertEqual(monitor._log_every_n_steps, log_every_n_steps)
+        monitor.on_train_start(trainer=trainer, pl_module=None)
+        self.assertEqual(monitor._log_every_n_steps, log_every_n_steps)
 
     @parameterized.expand([
         param(False),
@@ -46,8 +45,7 @@ class TestImageCallbacks(unittest.TestCase):
     @parameterized.expand([
         param(
             dict((key, torch.rand((10, 10))) for key in ('loss', 'pred')),
-            torch.rand(10, 3, 100, 100)
-        ),
+            torch.rand(10, 3, 100, 100)),
         param(
             torch.rand(10, 10),
             torch.rand(10, 3, 100, 100),

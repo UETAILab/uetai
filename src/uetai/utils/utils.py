@@ -10,7 +10,7 @@ URL_PREFIX = "https://drive.google.com/uc?id="
 CHUNK_SIZE = 32768
 
 
-def download_from_url(url: str, save_dir: Union[str, Path] = None) -> str:
+def download_from_url(url: str, save_dir: Union[str, Path] = './') -> str:
     save_dir.mkdir(parents=True, exist_ok=True)  # create save_dir
     save_dir = save_dir / Path(url).name
     print(f"Downloading {url} to {save_dir}")

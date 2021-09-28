@@ -21,6 +21,7 @@ from pytorch_lightning.loggers import (
 )
 
 from uetai.logger.general import colorstr
+from uetai.utils import download_from_url
 
 try:
     import wandb
@@ -285,6 +286,9 @@ view at http://localhost:6006/
                         dataset_name, alias, save_path=path
                     )
                     return path
+            if path.startswith('http'):
+                path = download_from_url(path, save_dir='./datasets')
+                return path
 
         raise Exception("Dataset not found. Please try using `wandb` to download artifact")
 

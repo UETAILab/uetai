@@ -1,10 +1,8 @@
 """uetai utilities"""
 import os
-import sys
-
 import torch
 import gdown
-import zipfile
+# import zipfile
 from pathlib import Path
 from typing import Union
 
@@ -18,7 +16,7 @@ def download_from_url(url: str, save_dir: Union[str, Path] = None) -> str:
     print(f"Downloading {url} to {save_dir}")
     torch.hub.download_url_to_file(url, save_dir)
     # if save_dir.endswith(".zip"):  # unzip
-        # _unzip_file()
+    # unzip_file()
     return save_dir
 
 
@@ -39,8 +37,7 @@ def download_from_google_drive(id_or_url: str, save_path: Union[str, Path] = Non
 
 # def _unzip_file(path: Union[str, Path], destination: Union[str, Path]) -> None:
 #     path = path / Path(filename.name[: -len(".zip")])
-#     print(f"Unziping {filename} to {path}")
+#     print(f"Unzipping {filename} to {path}")
 #     with zipfile.ZipFile(filename, "r") as zip_ref:
 #         zip_ref.extractall(path)
 #     url = str(path)
-

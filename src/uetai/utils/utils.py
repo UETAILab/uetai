@@ -11,8 +11,8 @@ CHUNK_SIZE = 32768
 
 
 def download_from_url(url: str, save_dir: Union[str, Path] = './') -> str:
-    save_dir.mkdir(parents=True, exist_ok=True)  # create save_dir
-    save_dir = save_dir / Path(url).name
+    Path(save_dir).mkdir(parents=True, exist_ok=True)  # create save_dir
+    save_dir = Path(save_dir) / Path(url).name
     print(f"Downloading {url} to {save_dir}")
     torch.hub.download_url_to_file(url, save_dir)
     if str(save_dir).endswith(".zip"):  # unzip

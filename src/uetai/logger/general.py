@@ -1,7 +1,4 @@
 """uetai utilities"""
-import sys
-import subprocess
-import argparse
 import socket
 import platform
 from pathlib import Path

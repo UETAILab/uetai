@@ -1,44 +1,41 @@
 """image classifier callbacks"""
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
-import torch
 from torch import Tensor
 from torchvision import transforms
-from pytorch_lightning import Trainer, Callback, LightningModule
-from pytorch_lightning.loggers.base import LightningLoggerBase
-from pytorch_lightning.utilities.warnings import rank_zero_warn
+
+import pytorch_lightning as pl
+from pytorch_lightning import Callback
 
 from uetai.logger import SummaryWriter
+from uetai.utils import warn_missing_pkg
+from uetai.callbacks.utils import check_logger, trainer_finish_run
 
 try:
     import wandb
 except (ImportError, AssertionError):
+    warn_missing_pkg("wandb")
     wandb = None
 
 
 class ImageMonitorBase(Callback):
-    """Base class for monitoring image data in a LightningModule.
+    """Base class for monitoring image data.
     """
-    def __init__(
-        self, log_every_n_steps: int = None, label_mapping: Dict[int, str] = None
-    ):
+    def __init__(self, log_every_n_steps: int = None, label_mapping: Dict[int, str] = None):
         super().__init__()
         self._log_every_n_steps: Optional[int] = log_every_n_steps
         self._log = False
-        self._trainer = Trainer
-        self._train_batch_idx: int
+        self._trainer = pl.Trainer
         self._mapping = label_mapping
 
-    def on_train_start(
-        self, trainer: Trainer, pl_module: LightningModule
-    ) -> None:
-        self._log = self._check_logger(trainer.logger)
+    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self._log = check_logger(trainer.logger)
         self._log_every_n_steps = self._log_every_n_steps or trainer.log_every_n_steps
         self._trainer = trainer
 
     def on_train_batch_end(
-        self, trainer: Trainer,
-        pl_module: LightningModule,
+        self, trainer: "pl.Trainer",
+        pl_module: "pl.LightningModule",
         outputs: Any,
         batch: Any,
         batch_idx: int,
@@ -70,24 +67,35 @@ class ImageMonitorBase(Callback):
             named_tensor.append([str(predict), image])
         self.add_image(tag='Media/train', batch=named_tensor)
 
-    def finish_run(self, trainer: Trainer = None) -> None:
-        if self._log:
-            self._trainer.logger.wandb_run.finish()
-
-    def add_image(
-        self, batch: List, tag: str = None,
+    def on_train_epoch_end(
+        self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", unused: Optional = None
     ) -> None:
-        """Log image(s) to Weight & Biases dashboard.
+        pass
+
+    def on_validation_batch_end(
+        self,
+        trainer: "pl.Trainer",
+        pl_module: "pl.LightningModule",
+        outputs: Any,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int,
+    ) -> None:
+        pass
+
+    def on_validation_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        pass
+
+    def on_keyboard_interrupt(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        trainer_finish_run(trainer=trainer)
+
+    def add_image(self, batch: List, tag: str = None,) -> None:
+        """Override this method to customize the logging of Image.
 
         :param batch: Image or collection of images (List of PIL Image)
-        :type image: List
+        :type batch: List
         :param tag: The tag the images
         :type tag: str, optional
-
-        .. example::
-            .. code::python
-            >>> buh buh lmao
-
         """
         images = []
         if tag is None:
@@ -97,12 +105,11 @@ class ImageMonitorBase(Callback):
             label = item[0]
             image = item[1]
             images.append(wandb.Image(image, caption=label))
-        self.__add_image(tag=tag, images=images)
+        self._add_image(tag=tag, images=images)
 
-    def __add_image(
-        self, tag: str, images: List or wandb.Image,
-    ) -> None:
-        """Override this method to customize the logging of Image.
+    def _add_image(self, tag: str, images: Union[wandb.Image, List[wandb.Image]],) -> None:
+        """
+        Log image(s) to Weight & Biases dashboard.
 
         :param tag: The name of the logging panel in dashboard
         :type tag: str
@@ -110,27 +117,19 @@ class ImageMonitorBase(Callback):
         :type images: List
         """
         if wandb is None:
-            raise ImportError(
-                "To log image with `wandb`, please it install with `pip install wandb`"
-            )
+            raise ImportError("To log image with `wandb`, please it install with `pip install wandb`")
         logger = self._trainer.logger
-        logger.wandb_run.log({tag: images})
+        if isinstance(logger, SummaryWriter) and 'wandb' in logger.log_tool:
+            logger.wandb_run.log({tag: images})
 
-    def _check_logger(self, logger: LightningLoggerBase) -> bool:
-        available = True
-        if not logger:
-            rank_zero_warn("Cannot log image because Trainer has no logger.")
-            available = False
-        elif not isinstance(logger, SummaryWriter):
-            rank_zero_warn(
-                f"{self.__class__.__name__} does not "
-                "support logging with {logger.__class__.__name__}."
-            )
-            available = False
-        else:
-            if 'wandb' not in logger.log_tool:
-                rank_zero_warn(
-                    "Current `Summary_Writer` is not running with `wandb`."
-                    "Please enable `wandb` to log image"
-                )
-        return available
+
+class ClassificationMonitor(ImageMonitorBase):
+    def __init__(self, *args, **kwargs):
+        # TODO: mapping label
+        super().__init__(*args, **kwargs)
+
+    def add_image(self, batch: List, tag: str = None,) -> None:
+        """
+        Override `add_image` method
+        """
+        pass

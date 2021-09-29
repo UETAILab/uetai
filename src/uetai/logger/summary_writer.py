@@ -20,6 +20,7 @@ from pytorch_lightning.loggers import (
     LightningLoggerBase
 )
 
+import uetai
 from uetai.logger.general import colorstr
 
 try:

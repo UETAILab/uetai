@@ -12,12 +12,15 @@ def check_logger(logger: LightningLoggerBase) -> bool:
         msg = "Trainer has no logger. Cannot log media."
         available = False
     elif isinstance(logger, SummaryWriter):
-        if 'wandb' not in logger.log_tool:
-            msg = "`Summary_Writer` is not logging with `wandb`. Please set `WANDB_API_KEY` to start using `wandb`"
+        if 'wandb' != logger.log_tool:
+            msg = ("`Summary_Writer` is not logging with `wandb`."
+                   "Please set `WANDB_API_KEY` to start using `wandb`")
     else:
         msg = f"Except logger is `SummaryWriter` type, receive {logger.__class__.__name__}"
         available = False
-    rank_zero_warn(msg)
+
+    if msg is not None:
+        rank_zero_warn(msg)
     return available
 
 

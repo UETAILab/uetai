@@ -1,10 +1,8 @@
 """Image callback ./callbacks/image_monitor testcase"""
 import unittest
-# import pytest
-from parameterized import parameterized, param, parameterized_class
+from parameterized import parameterized, param
 
 import torch
-import torch.nn as nn
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 
@@ -12,13 +10,8 @@ from uetai.callbacks import ImageMonitorBase
 from uetai.logger import SummaryWriter
 
 
-@parameterized_class(('outputs', 'images'), [
-    (dict((key, torch.rand(10, requires_grad=True)) for key in ('loss', 'pred')), torch.rand(10, 3, 100, 100)),
-    (torch.rand(10, requires_grad=True), torch.rand(10, 3, 100, 100)),
-])
 class TestImageCallbacks(unittest.TestCase):
     """Image callbacks test"""
-
     def __init__(self, *args, **kwargs):
         super(TestImageCallbacks, self).__init__(*args, **kwargs)
         self.monitor = ImageMonitorBase()
@@ -50,35 +43,34 @@ class TestImageCallbacks(unittest.TestCase):
         monitor.on_train_start(trainer, pl_module=None)
         self.assertWarns(UserWarning)
 
-    def test_training_image_monitor_by_step(self):
-        monitor = ImageMonitorBase(on_step=True)
-        trainer = Trainer(
-            logger=self.logger,
-            log_every_n_steps=1,
-            callbacks=[monitor],
-        )
-        self._test_training_image_monitor(self.images, self.outputs, monitor, trainer)
+    @parameterized.expand([
+        (dict((key, torch.rand(10, requires_grad=True)) for key in ('loss', 'pred')), torch.rand(10, 3, 100, 100)),
+        (torch.rand(10, requires_grad=True), torch.rand(10, 3, 100, 100)),
+    ])
+    def test_training_image_monitor(self, images, outputs):
+        # monitor by step
+        self.training_image_log(images=images, outputs=outputs)
 
-    def test_training_monitor_by_epoch(self):
-        monitor = ImageMonitorBase(on_epoch=True, log_n_element_per_epoch=2)
+        # monitor by epoch
+        monitor = ImageMonitorBase(on_step=True)
         trainer = Trainer(
             logger=self.logger,
             callbacks=[monitor]
         )
-        self._test_training_image_monitor(self.images, self.outputs, monitor, trainer)
+        self.training_image_log(images=images, outputs=outputs, monitor=monitor, trainer=trainer)
         monitor.on_train_epoch_end(trainer, None)
 
-    # @parameterized.expand([
-    #     (torch.rand(10), torch.rand(1, 5, 10, 10), TypeError),
-    #     (str('fail'), torch.rand(10, 3, 100, 100), UserWarning)
-    # ])
-    # def test_training_image_monitor_xfail(self, outputs, images, expectation):
-    #     with self.assertRaises(expectation):
-    #         self._test_training_image_monitor(images, outputs)
+    @parameterized.expand([
+        (torch.rand(10), torch.rand(1, 5, 10, 10), ValueError),
+        (str('fail'), torch.rand(10, 3, 100, 100), TypeError)
+    ])
+    def test_training_image_monitor_xfail(self, outputs, images, expectation):
+        with self.assertRaises(expected_exception=expectation):
+            self.training_image_log(images=images, outputs=outputs)
 
-    def _test_training_image_monitor(self, images, outputs, monitor=None, trainer=None):
+    def training_image_log(self, images, outputs, monitor=None, trainer=None):
         if monitor is None:
-            monitor = ImageMonitorBase()
+            monitor = ImageMonitorBase(log_every_n_steps=1)
         if trainer is None:
             trainer = Trainer(logger=self.logger, callbacks=[monitor])
         monitor.on_train_start(trainer, None)

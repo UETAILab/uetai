@@ -72,7 +72,7 @@ class ImageMonitorBase(Callback):
         elif isinstance(outputs, Tensor):
             pred = outputs
         else:
-            raise Exception(f"Except `outputs` to be List or Dict, get {type(outputs)}")
+            raise TypeError(f"Except `outputs` to be List or Dict, get {type(outputs)}")
 
         for idx, image in enumerate(tensor):
             transformed_image = transforms.ToPILImage()(image).convert("RGB")  # WxH dimension
@@ -154,24 +154,24 @@ class ImageMonitorBase(Callback):
             logger.wandb_run.log({tag: images})
 
 
-class ClassificationMonitor(ImageMonitorBase):
-    def __init__(self, label_mapping, *args, **kwargs):
-        # TODO: mapping label
-        super().__init__(*args, **kwargs)
-        self._mapping = label_mapping
-
-    def add_image(self, batch: List, tag: str = None,) -> None:
-        """
-        Override `add_image` method
-        """
-        # TODO: extract predict, mapping label
-
-        #     if self._mapping is not None:
-        #         assert predict <= len(self._mapping), (
-        #             f"Can't mapping because {predict} doesn't belong to {self._mapping}"
-        #         )
-        #         predict = self._mapping[predict.item()]  # mapping label
-        pass
-        # map label's id to name
-        # label = item[0]
-        # image = item[1]
+# class ClassificationMonitor(ImageMonitorBase):
+#     def __init__(self, label_mapping, *args, **kwargs):
+#         # TODO: mapping label
+#         super().__init__(*args, **kwargs)
+#         self._mapping = label_mapping
+#
+#     def add_image(self, batch: List, tag: str = None,) -> None:
+#         """
+#         Override `add_image` method
+#         """
+#         # TODO: extract predict, mapping label
+#
+#         #     if self._mapping is not None:
+#         #         assert predict <= len(self._mapping), (
+#         #             f"Can't mapping because {predict} doesn't belong to {self._mapping}"
+#         #         )
+#         #         predict = self._mapping[predict.item()]  # mapping label
+#         pass
+#         # map label's id to name
+#         # label = item[0]
+#         # image = item[1]

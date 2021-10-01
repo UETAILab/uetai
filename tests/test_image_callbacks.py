@@ -14,21 +14,21 @@ from uetai.logger import SummaryWriter
 
 class TestImageCallbacks(unittest.TestCase):
     """Image callbacks test"""
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs):
         super(TestImageCallbacks, self).__init__(*args, **kwargs)
         self.monitor = ImageMonitorBase()
+        self.logger = SummaryWriter('uetai', log_tool='wandb')
 
-    def test_base_log_interval_overide(self,):
+    def test_base_log_interval_override(self, log_every_n_steps=1):
         """Test logging interval set by log_every_n_steps argument."""
-        for log_every_n_steps in [1, 3, 4]:
-            monitor = ImageMonitorBase()
-            trainer = Trainer(
-                callbacks=[self.monitor],
-                log_every_n_steps=log_every_n_steps
-            )
-            # self.assertEqual(monitor._log_every_n_steps, log_every_n_steps)
-            monitor.on_train_start(trainer=trainer, pl_module=None)
-            self.assertEqual(monitor._log_every_n_steps, log_every_n_steps)
+        monitor = ImageMonitorBase()
+        trainer = Trainer(
+            logger=False,
+            callbacks=[monitor],
+            log_every_n_steps=log_every_n_steps
+        )
+        monitor.on_train_start(trainer=trainer, pl_module=None)
+        self.assertEqual(monitor._log_every_n_steps, log_every_n_steps)
 
     @parameterized.expand([
         param(False),
@@ -38,40 +38,41 @@ class TestImageCallbacks(unittest.TestCase):
     ])
     def test_base_unsupported_logger_warning(self, logger):
         """Test passing unsupported logger"""
+        monitor = ImageMonitorBase()
         trainer = Trainer(
             logger=logger, callbacks=[ImageMonitorBase()]
         )
-        self.monitor.on_train_start(trainer, pl_module=None)
+        monitor.on_train_start(trainer, pl_module=None)
+        self.assertWarns(UserWarning)
 
     @parameterized.expand([
         param(
-            dict((key, torch.rand((10, 10))) for key in ('loss', 'pred')),
+            dict((key, torch.rand(10, requires_grad=True)) for key in ('loss', 'pred')),
             torch.rand(10, 3, 100, 100)
         ),
         param(
-            torch.rand(10, 10),
+            torch.rand(10, requires_grad=True),
             torch.rand(10, 3, 100, 100),
         ),
     ])
-    def test_training_image_monitor(self, outputs, tmp_images):
-        logger = SummaryWriter("uetai", log_tool='wandb')
+    def test_training_image_monitor(self, outputs, images):
+        monitor = ImageMonitorBase()
         model = nn.Linear(100, 10)  # assume dataset have 10 classes
         trainer = Trainer(
-            logger=logger,
+            logger=self.logger,
             log_every_n_steps=1,
-            callbacks=[self.monitor],
+            callbacks=[monitor],
         )
-        self.monitor.on_train_start(trainer, model)
+        monitor.on_train_start(trainer, model)
 
         # log input tensor and prediction
         example_data = [
-            tmp_images,  # tensor
-            torch.rand(10),  # ground-truth
+            images,  # tensor
+            torch.rand(10, requires_grad=True),  # ground-truth
             10  # batch-size
         ]
-        self.monitor.on_train_batch_end(
-            trainer,
-            model,
+        monitor.on_train_batch_end(
+            trainer, model,
             batch=example_data,
             outputs=outputs,
             batch_idx=0,

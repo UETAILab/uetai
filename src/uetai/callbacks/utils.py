@@ -15,6 +15,7 @@ def check_logger(logger: LightningLoggerBase) -> bool:
         if 'wandb' != logger.log_tool:
             msg = ("`Summary_Writer` is not logging with `wandb`."
                    "Please set `WANDB_API_KEY` to start using `wandb`")
+            available = False
     else:
         msg = f"Except logger is `SummaryWriter` type, receive {logger.__class__.__name__}"
         available = False

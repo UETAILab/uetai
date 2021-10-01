@@ -38,7 +38,7 @@ class ImageMonitorBase(Callback):
         self._log_every_n_steps = log_every_n_steps  # default is 50 in trainer.log_every_n_steps
         self._log_n_element_per_epoch = log_n_element_per_epoch  # default log all
         if self._on_epoch:
-            self._epoch: Dict[str, Any] = {}
+            self._epoch: Dict[str, List] = {'images': [], 'ground_truths': [], 'predictions': []}
             self._on_step = False
 
     def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
@@ -83,7 +83,7 @@ class ImageMonitorBase(Callback):
             for key, value in compressed_batch.items():
                 self._epoch[key] += value   # epoch:  number_of_data x W x H dimension
         if self._on_step:
-            self.add_image(tag='Train/step_media', media=compressed_batch)
+            self.add_image(tag='Train/media_step', media=compressed_batch)
 
     def on_train_epoch_end(
         self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", unused: Optional = None
@@ -95,8 +95,8 @@ class ImageMonitorBase(Callback):
         if self._log_n_element_per_epoch is None:
             top_n_image = self._epoch  # default log all images (not recommend)
         else:
-            top_n_image = self._epoch[:self._log_n_element_per_epoch]
-        self.add_image(tag='Train/epoch_media', media=top_n_image)
+            top_n_image = {key: val[:self._log_n_element_per_epoch] for key, val in self._epoch.items()}
+        self.add_image(tag='Train/media_epoch', media=top_n_image)
         self._epoch = {}  # reset List for next epoch
 
     def on_validation_batch_end(

@@ -47,9 +47,9 @@ class TestImageCallbacks(unittest.TestCase):
         (dict((key, torch.rand(10, requires_grad=True)) for key in ('loss', 'pred')), torch.rand(10, 3, 100, 100)),
         (torch.rand(10, requires_grad=True), torch.rand(10, 3, 100, 100)),
     ])
-    def test_training_image_monitor(self, images, outputs):
+    def test_training_image_monitor(self, outputs, images):
         # monitor by step
-        self.training_image_log(images=images, outputs=outputs)
+        self.training_image_log(outputs=outputs, images=images)
 
         # monitor by epoch
         monitor = ImageMonitorBase(on_step=True)
@@ -57,7 +57,7 @@ class TestImageCallbacks(unittest.TestCase):
             logger=self.logger,
             callbacks=[monitor]
         )
-        self.training_image_log(images=images, outputs=outputs, monitor=monitor, trainer=trainer)
+        self.training_image_log(outputs=outputs, images=images, monitor=monitor, trainer=trainer)
         monitor.on_train_epoch_end(trainer, None)
 
     @parameterized.expand([
@@ -65,10 +65,10 @@ class TestImageCallbacks(unittest.TestCase):
         (str('fail'), torch.rand(10, 3, 100, 100), TypeError)
     ])
     def test_training_image_monitor_xfail(self, outputs, images, expectation):
-        with self.assertRaises(expected_exception=expectation):
-            self.training_image_log(images=images, outputs=outputs)
+        with self.assertRaises(expectation):
+            self.training_image_log(outputs=outputs, images=images)
 
-    def training_image_log(self, images, outputs, monitor=None, trainer=None):
+    def training_image_log(self, outputs, images, monitor=None, trainer=None):
         if monitor is None:
             monitor = ImageMonitorBase(log_every_n_steps=1)
         if trainer is None:

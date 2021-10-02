@@ -48,5 +48,5 @@ class TestSummaryWriter(TestCase):
 
     def test_data_path_url(self):
         logger = SummaryWriter("uetai")
-        data_dir = logger.data_path("https://data.deepai.org/mnist.zip")
+        data_dir = logger.data_path("https://file-examples-com.github.io/uploads/2017/02/zip_10MB.zip")
         self.assertTrue(os.path.exists(data_dir))

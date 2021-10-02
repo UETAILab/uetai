@@ -1,4 +1,5 @@
 """image classifier callbacks"""
+import warnings
 from typing import Any, Dict, List, Optional, Union
 
 from torch import Tensor
@@ -8,14 +9,13 @@ import pytorch_lightning as pl
 from pytorch_lightning import Callback
 
 from uetai.logger import SummaryWriter
-from uetai.utils import warn_missing_pkg
 from uetai.callbacks.utils import check_logger, trainer_finish_run
 
 try:
     import wandb
 except (ImportError, AssertionError):
-    warn_missing_pkg("wandb")
     wandb = None
+    warnings.warn('Missing package `wandb`. Run `pip install wandb` to install it')
 
 
 class ImageMonitorBase(Callback):
@@ -116,7 +116,7 @@ class ImageMonitorBase(Callback):
     def on_keyboard_interrupt(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         trainer_finish_run(trainer=trainer)
 
-    def add_image(self, media: Dict[str, List], tag: str = None,) -> None:
+    def add_image(self, media: Dict[str, List] = 'Media', tag: str = None,) -> None:
         """Override this method to customize the logging of Image.
 
         :param media: Dictionary contains images, ground_truth and predict
@@ -125,9 +125,6 @@ class ImageMonitorBase(Callback):
         :type tag: str, optional
         """
         images = []
-        if tag is None:
-            tag = 'Media'
-
         for idx, item in enumerate(media['images']):
             predict = media['predictions'][idx]
             gt = media['ground_truths'][idx]
@@ -156,7 +153,6 @@ class ImageMonitorBase(Callback):
 
 # class ClassificationMonitor(ImageMonitorBase):
 #     def __init__(self, label_mapping, *args, **kwargs):
-#         # TODO: mapping label
 #         super().__init__(*args, **kwargs)
 #         self._mapping = label_mapping
 #
@@ -164,14 +160,4 @@ class ImageMonitorBase(Callback):
 #         """
 #         Override `add_image` method
 #         """
-#         # TODO: extract predict, mapping label
-#
-#         #     if self._mapping is not None:
-#         #         assert predict <= len(self._mapping), (
-#         #             f"Can't mapping because {predict} doesn't belong to {self._mapping}"
-#         #         )
-#         #         predict = self._mapping[predict.item()]  # mapping label
-#         pass
-#         # map label's id to name
-#         # label = item[0]
-#         # image = item[1]
+

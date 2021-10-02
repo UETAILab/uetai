@@ -14,7 +14,6 @@ class TestImageCallbacks(unittest.TestCase):
     """Image callbacks test"""
     def __init__(self, *args, **kwargs):
         super(TestImageCallbacks, self).__init__(*args, **kwargs)
-        self.monitor = ImageMonitorBase()
         self.logger = SummaryWriter('uetai', log_tool='wandb')
 
     def test_base_log_interval_override(self, log_every_n_steps=1):
@@ -48,17 +47,23 @@ class TestImageCallbacks(unittest.TestCase):
         (torch.rand(10, requires_grad=True), torch.rand(10, 3, 100, 100)),
     ])
     def test_training_image_monitor(self, outputs, images):
-        # monitor by step
         self.training_image_log(outputs=outputs, images=images)
 
-        # monitor by epoch
-        monitor = ImageMonitorBase(on_step=True)
+    @parameterized.expand([
+        (ImageMonitorBase(on_step=True), ),
+        (ImageMonitorBase(on_epoch=True), ),
+        (ImageMonitorBase(on_epoch=True, log_n_element_per_epoch=2), ),
+    ])
+    def test_training_callbacks_by_epoch_n_step(self, monitor=None):
+        sample_images = torch.rand(10, 3, 100, 100)
+        sample_outputs = torch.rand(10, requires_grad=True)
         trainer = Trainer(
             logger=self.logger,
             callbacks=[monitor]
         )
-        self.training_image_log(outputs=outputs, images=images, monitor=monitor, trainer=trainer)
-        monitor.on_train_epoch_end(trainer, None)
+        self.training_image_log(
+            images=sample_images, outputs=sample_outputs, monitor=monitor, trainer=trainer
+        )
 
     @parameterized.expand([
         (torch.rand(10), torch.rand(1, 5, 10, 10), ValueError),
@@ -86,3 +91,4 @@ class TestImageCallbacks(unittest.TestCase):
             batch_idx=0,
             dataloader_idx=0
         )
+        monitor.on_train_epoch_end(trainer, None)

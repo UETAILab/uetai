@@ -5,6 +5,7 @@ import os
 import zipfile
 import argparse
 import datetime
+import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Union, Optional
 
@@ -29,6 +30,7 @@ try:
     assert hasattr(wandb, "__version__")  # verify package import not local dir
 except (ImportError, AssertionError):
     wandb = None
+    warnings.warn('Missing package `wandb`. Run `pip install wandb` to install it')
 
 
 class SummaryWriter(LightningLoggerBase):

@@ -160,4 +160,3 @@ class ImageMonitorBase(Callback):
 #         """
 #         Override `add_image` method
 #         """
-

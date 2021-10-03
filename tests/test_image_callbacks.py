@@ -40,7 +40,7 @@ class TestImageCallbacks(unittest.TestCase):
         trainer = Trainer(
             logger=logger, callbacks=[ImageMonitorBase()]
         )
-        monitor.on_train_stat(trainer, pl_module=None)
+        monitor.on_train_start(trainer, pl_module=None)
         self.assertWarns(UserWarning)
         monitor.on_train_epoch_end(trainer, None)
 

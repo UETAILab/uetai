@@ -40,25 +40,23 @@ class TestImageCallbacks(unittest.TestCase):
         trainer = Trainer(
             logger=logger, callbacks=[ImageMonitorBase()]
         )
-        monitor.on_train_start(trainer, pl_module=None)
+        monitor.on_train_stat(trainer, pl_module=None)
         self.assertWarns(UserWarning)
         monitor.on_train_epoch_end(trainer, None)
 
     @parameterized.expand([
-        (
-            dict((key, torch.rand(10, requires_grad=True)) for key in ('loss', 'pred')),
-            torch.rand(10, 3, 100, 100)
-        ),
-        (torch.rand(10, requires_grad=True), torch.rand(10, 3, 100, 100)),
+        (dict((key, torch.randint(10, (10,), dtype=torch.float, requires_grad=True))
+         for key in ('loss', 'pred')), torch.rand(10, 3, 100, 100)),
+        (torch.randint(10, (10,), dtype=torch.float, requires_grad=True), torch.rand(10, 3, 100, 100)),
     ])
     def test_training_image_monitor(self, outputs, images):
-        # mapping = {i: str(i) for i in range(10)}
-        # monitor = ImageMonitorBase(label_mapping=mapping)
-        self.pipeline_image_monitor(outputs=outputs, images=images)
+        mapping = {i: str(i) for i in range(10)}
+        monitor = ImageMonitorBase(label_mapping=mapping, log_every_n_steps=1)
+        self.pipeline_image_monitor(outputs=outputs, images=images, monitor=monitor)
 
     @parameterized.expand([
-        (ImageMonitorBase(on_step=True), ),
-        (ImageMonitorBase(on_epoch=True), ),
+        (ImageMonitorBase(on_step=True),),
+        (ImageMonitorBase(on_epoch=True),),
         (ImageMonitorBase(on_epoch=True, log_n_element_per_epoch=2),),
     ])
     def test_training_callbacks_by_epoch_n_step(self, monitor=None):
@@ -88,7 +86,7 @@ class TestImageCallbacks(unittest.TestCase):
         monitor.on_train_start(trainer, None)
         example_data = [
             images,  # tensor
-            torch.rand(10, requires_grad=True),  # ground-truth
+            torch.randint(10, (10,), dtype=torch.float, requires_grad=True),  # ground-truth
             10  # batch-size
         ]
         monitor.on_train_batch_end(

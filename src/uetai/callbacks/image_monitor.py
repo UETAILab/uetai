@@ -42,7 +42,7 @@ class ImageMonitorBase(Callback):
             self._on_step = False
 
     def _init_epoch(self):
-        self._epoch: Dict[str, List] = {'images': [], 'ground_truths': [], 'predictions': []}
+        self._epoch: Dict[str, List] = {'images': [], 'truths': [], 'predictions': []}
 
     def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         self._trainer = trainer
@@ -104,10 +104,10 @@ class ImageMonitorBase(Callback):
     def on_keyboard_interrupt(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         trainer_finish_run(trainer=trainer)
 
-    def add_image(self, media: Dict[str, List] = 'Media', tag: str = None,) -> None:
+    def add_image(self, media: Dict[str, List], tag: str = 'Media',) -> None:
         """Override this method to customize the logging of Image.
 
-        :param media: Dictionary contains images, ground_truth and predict
+        :param media: Dictionary contains `images`, `truths` and `predictions` as key
         :type media: Dict[str, List]
         :param tag: The tag the images
         :type tag: str, optional
@@ -115,33 +115,33 @@ class ImageMonitorBase(Callback):
         images = []
         for idx, item in enumerate(media['images']):
             predict = media['predictions'][idx]
-            gt = media['ground_truths'][idx]
+            gt = media['truths'][idx]
             if self._label_mapping is not None:
-                assert predict in self._label_mapping, f'Mapping dictionary is not including index {predict}'
-                assert gt in self._label_mapping, f'Mapping dictionary is not including index {gt}'
-                predict = self._label_mapping[predict]  # mapping label
-                gt = self._label_mapping[gt]
-            images.append(wandb.Image(item, caption=f'Gt: {gt} - Predict: {predict}'))
+                predict = mapping_idx_label(predict, self._label_mapping)
+                gt = mapping_idx_label(gt, self._label_mapping)
+            images.append(wandb.Image(item, caption=f'Truth: {gt} - Predict: {predict}'))
 
-        self._add_image(tag=tag, images=images)
+        self._log_media(tag=tag, media=images)
 
-    def _add_image(self, tag: str, images: Union[wandb.Image, List[wandb.Image]],) -> None:
+    def _log_media(self, tag: str, media: Union[wandb.Image, wandb.Table, List[wandb.Image]], ) -> None:
         """
         Log image(s) to Weight & Biases dashboard.
 
         :param tag: The name of the logging panel in dashboard
         :type tag: str
-        :param images: The `wandb.Image` or List of images that going to be logging
-        :type images: List[wandb.Image] or wandb.Image
+        :param media: The `wandb.Image` or List of images that going to be logging
+        :type media: List[wandb.Image] or wandb.Image
         """
         if wandb is None:
             raise ImportError("To log image with `wandb`, please it install with `pip install wandb`")
         logger = self._trainer.logger
         if isinstance(logger, SummaryWriter) and 'wandb' in logger.log_tool:
-            logger.wandb_run.log({tag: images})
+            if isinstance(media, wandb.Table):
+                tag = tag.replace('/', '_')
+            logger.wandb_run.log({tag: media})
 
     def _extract_output_and_batch(self, outputs: Any, batch: Any):
-        compressed_batch: Dict[str, List] = {'images': [], 'ground_truths': [], 'predictions': []}
+        compressed_batch: Dict[str, List] = {'images': [], 'truths': [], 'predictions': []}
         tensor, gt, _ = batch  # tensor, label, batch_size
         # output must be Tensor or Dict ơf Tensor
         if isinstance(outputs, Dict):
@@ -154,7 +154,7 @@ class ImageMonitorBase(Callback):
         for idx, image in enumerate(tensor):
             transformed_image = transforms.ToPILImage()(image).convert("RGB")  # WxH dimension
             compressed_batch['images'].append(transformed_image)  # batch_size x W x H dimension
-            compressed_batch['ground_truths'].append(gt[idx].item())
+            compressed_batch['truths'].append(gt[idx].item())
             compressed_batch['predictions'].append(pred[idx].item())
         if self._on_epoch:
             for key, value in compressed_batch.items():
@@ -169,12 +169,33 @@ class ImageMonitorBase(Callback):
         top_n_image = {key: val[:self._log_n_element_per_epoch] for key, val in self._epoch.items()}
         return top_n_image
 
-# class ClassificationMonitor(ImageMonitorBase):
-#     def __init__(self, label_mapping, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self._mapping = label_mapping
-#
-#     def add_image(self, batch: List, tag: str = None,) -> None:
-#         """
-#         Override `add_image` method
-#         """
+
+class ClassificationMonitor(ImageMonitorBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self._label_mapping is None:
+            warnings.warn("Classification callback should init with mapping rules. Missing `label_mapping`")
+
+    def add_image(self, media: Dict[str, List], tag: str = 'Media',) -> None:
+        """
+        Override `add_image` method
+        """
+        columns = ['image', 'truth', 'prediction']
+        # if self._label_mapping is not None:
+        #     for id in range(len(self._label_mapping)):
+        #         columns.append("score_" + str(id))
+        summary_table = wandb.Table(columns=columns)
+
+        for idx, item in enumerate(media['images']):
+            predict = media['predictions'][idx]
+            gt = media['truths'][idx]
+            if self._label_mapping is not None:
+                predict = mapping_idx_label(predict, self._label_mapping)
+                gt = mapping_idx_label(gt, self._label_mapping)
+            summary_table.add_data(wandb.Image(item), gt, predict)
+        super()._log_media(tag=tag, media=summary_table)
+
+
+def mapping_idx_label(idx: int, label_mapping: Dict[int, str]):
+    assert idx in label_mapping, f'Mapping dictionary is not including index {idx}'
+    return label_mapping[idx]

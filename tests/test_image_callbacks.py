@@ -6,7 +6,7 @@ import torch
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 
-from uetai.callbacks import ImageMonitorBase
+from uetai.callbacks import ImageMonitorBase, ClassificationMonitor
 from uetai.logger import SummaryWriter
 
 
@@ -56,7 +56,7 @@ class TestImageCallbacks(unittest.TestCase):
 
     @parameterized.expand([
         (ImageMonitorBase(on_step=True),),
-        (ImageMonitorBase(on_epoch=True),),
+        (ClassificationMonitor(on_epoch=True),),
         (ImageMonitorBase(on_epoch=True, log_n_element_per_epoch=2),),
     ])
     def test_training_callbacks_by_epoch_n_step(self, monitor=None):

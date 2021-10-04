@@ -88,7 +88,7 @@ class ImageMonitorBase(Callback):
         if self._log:
             compressed_batch: Dict[str, Any] = self._extract_output_and_batch(outputs, batch)
             if self._on_step and (batch_idx + 1) % self._log_every_n_steps == 0:
-                self.add_image(tag='Valid/media_step', media=compressed_batchm, logger=trainer.logger)
+                self.add_image(tag='Valid/media_step', media=compressed_batch, logger=trainer.logger)
 
     def on_validation_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         if self._on_epoch:
@@ -105,6 +105,8 @@ class ImageMonitorBase(Callback):
 
         :param media: Dictionary contains `images`, `truths` and `predictions` as key
         :type media: Dict[str, List]
+        :param logger: Logger
+        :type logger: SummaryWriter
         :param tag: The tag the images
         :type tag: str, optional
         """
@@ -119,26 +121,7 @@ class ImageMonitorBase(Callback):
                 gt = mapping_idx_label(gt, self._label_mapping)
             images.append(wandb.Image(item, caption=f'Truth: {gt} - Predict: {predict}'))
 
-        self._log_media(tag=tag, media=images, logger=logger)
-
-    def _log_media(
-        self, tag: str, logger: Any,
-        media: Union[wandb.Image, wandb.Table, List[wandb.Image]], ) -> None:
-        """
-        Log image(s) to Weight & Biases dashboard.
-
-        :param tag: The name of the logging panel in dashboard
-        :type tag: str
-        :param media: The `wandb.Image` or List of images that going to be logging
-        :type media: List[wandb.Image] or wandb.Image
-        """
-        if wandb is None:
-            raise ImportError("To log image with `wandb`, please it install with `pip install wandb`")
-        # logger = self._trainer.logger
-        if isinstance(logger, SummaryWriter) and 'wandb' in logger.log_tool:
-            if isinstance(media, wandb.Table):
-                tag = tag.replace('/', '_')
-            logger.wandb_run.log({tag: media})
+        _log_media(tag=tag, media=images, logger=logger)
 
     def _extract_output_and_batch(self, outputs: Any, batch: Any):
         compressed_batch: Dict[str, List] = {'inputs': [], 'truths': [], 'predictions': []}
@@ -205,9 +188,30 @@ class ClassificationMonitor(ImageMonitorBase):
             else:
                 cache_data.extend([gt, torch.max(predict.detach(), dim=0)[1]])
             summary_table.add_data(*cache_data)
-        super()._log_media(tag=tag, media=summary_table, logger=logger)
+        _log_media(tag=tag, media=summary_table, logger=logger)
 
 
 def mapping_idx_label(idx: int, label_mapping: Dict[int, str]):
     assert idx in label_mapping, f'Mapping dictionary is not including index {idx}'
     return label_mapping[idx]
+
+
+def _log_media(
+    tag: str, logger: Any,
+    media: Union[wandb.Image, wandb.Table, List[wandb.Image]],
+) -> None:
+    """
+    Log image(s) to Weight & Biases dashboard.
+
+    :param tag: The name of the logging panel in dashboard
+    :type tag: str
+    :param media: The `wandb.Image` or List of images that going to be logging
+    :type media: List[wandb.Image] or wandb.Image
+    """
+    if wandb is None:
+        raise ImportError("To log image with `wandb`, please it install with `pip install wandb`")
+    # logger = self._trainer.logger
+    if isinstance(logger, SummaryWriter) and 'wandb' in logger.log_tool:
+        if isinstance(media, wandb.Table):
+            tag = tag.replace('/', '_')
+        logger.wandb_run.log({tag: media})

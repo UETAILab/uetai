@@ -45,9 +45,8 @@ class TestImageCallbacks(unittest.TestCase):
         monitor.on_train_epoch_end(trainer, None)
 
     @parameterized.expand([
-        (dict((key, torch.randint(10, (10,), dtype=torch.float, requires_grad=True))
-         for key in ('loss', 'pred')), torch.rand(10, 3, 100, 100)),
-        (torch.randint(10, (10,), dtype=torch.float, requires_grad=True), torch.rand(10, 3, 100, 100)),
+        (dict((key, torch.rand((10, 10))) for key in ('loss', 'pred')), torch.rand(10, 3, 100, 100)),
+        (torch.randint(10, (10,)), torch.rand(10, 3, 100, 100)),  # outputs is position of highest probability label
     ])
     def test_training_image_monitor(self, outputs, images):
         mapping = {i: str(i) for i in range(10)}
@@ -61,7 +60,7 @@ class TestImageCallbacks(unittest.TestCase):
     ])
     def test_training_callbacks_by_epoch_n_step(self, monitor=None):
         sample_images = torch.rand(10, 3, 100, 100)
-        sample_outputs = torch.rand(10, requires_grad=True)
+        sample_outputs = torch.rand((10, 10))
         trainer = Trainer(
             logger=self.logger,
             callbacks=[monitor]
@@ -71,7 +70,7 @@ class TestImageCallbacks(unittest.TestCase):
         )
 
     @parameterized.expand([
-        (torch.rand(10), torch.rand(1, 5, 10, 10), ValueError),
+        (torch.rand(10, 10), torch.rand(1, 5, 10, 10), ValueError),
         (str('fail'), torch.rand(10, 3, 100, 100), TypeError)
     ])
     def test_training_image_monitor_xfail(self, outputs, images, expectation):
@@ -86,7 +85,7 @@ class TestImageCallbacks(unittest.TestCase):
         monitor.on_train_start(trainer, None)
         example_data = [
             images,  # tensor
-            torch.randint(10, (10,), dtype=torch.float, requires_grad=True),  # ground-truth
+            torch.randint(10, (10,), dtype=torch.float),  # ground-truth
             10  # batch-size
         ]
         monitor.on_train_batch_end(

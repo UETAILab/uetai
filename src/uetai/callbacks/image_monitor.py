@@ -2,6 +2,7 @@
 import warnings
 from typing import Any, Dict, List, Optional, Union
 
+import torch
 from torch import Tensor
 from torchvision import transforms
 
@@ -42,7 +43,7 @@ class ImageMonitorBase(Callback):
             self._on_step = False
 
     def _init_epoch(self):
-        self._epoch: Dict[str, List] = {'images': [], 'truths': [], 'predictions': []}
+        self._epoch: Dict[str, List] = {'inputs': [], 'truths': [], 'predictions': []}
 
     def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         self._trainer = trainer
@@ -113,11 +114,13 @@ class ImageMonitorBase(Callback):
         :type tag: str, optional
         """
         images = []
-        for idx, item in enumerate(media['images']):
+        for idx, item in enumerate(media['inputs']):
             predict = media['predictions'][idx]
+            if predict.dim() > 0:
+                predict = torch.max(predict, dim=0)[1]
             gt = media['truths'][idx]
             if self._label_mapping is not None:
-                predict = mapping_idx_label(predict, self._label_mapping)
+                predict = mapping_idx_label(predict.item(), self._label_mapping)
                 gt = mapping_idx_label(gt, self._label_mapping)
             images.append(wandb.Image(item, caption=f'Truth: {gt} - Predict: {predict}'))
 
@@ -141,7 +144,7 @@ class ImageMonitorBase(Callback):
             logger.wandb_run.log({tag: media})
 
     def _extract_output_and_batch(self, outputs: Any, batch: Any):
-        compressed_batch: Dict[str, List] = {'images': [], 'truths': [], 'predictions': []}
+        compressed_batch: Dict[str, List] = {'inputs': [], 'truths': [], 'predictions': []}
         tensor, gt, _ = batch  # tensor, label, batch_size
         # output must be Tensor or Dict ơf Tensor
         if isinstance(outputs, Dict):
@@ -153,9 +156,9 @@ class ImageMonitorBase(Callback):
 
         for idx, image in enumerate(tensor):
             transformed_image = transforms.ToPILImage()(image).convert("RGB")  # WxH dimension
-            compressed_batch['images'].append(transformed_image)  # batch_size x W x H dimension
+            compressed_batch['inputs'].append(transformed_image)  # batch_size x W x H dimension
             compressed_batch['truths'].append(gt[idx].item())
-            compressed_batch['predictions'].append(pred[idx].item())
+            compressed_batch['predictions'].append(pred[idx])
         if self._on_epoch:
             for key, value in compressed_batch.items():
                 self._epoch[key] += value  # epoch:  number_of_data x W x H dimension
@@ -180,19 +183,30 @@ class ClassificationMonitor(ImageMonitorBase):
         """
         Override `add_image` method
         """
+        data = []
         columns = ['image', 'truth', 'prediction']
-        # if self._label_mapping is not None:
-        #     for id in range(len(self._label_mapping)):
-        #         columns.append("score_" + str(id))
+        if self._label_mapping is not None:
+            for id in range(len(self._label_mapping)):
+                mapped_id = mapping_idx_label(id, self._label_mapping)
+                columns.append("score_" + str(mapped_id))
         summary_table = wandb.Table(columns=columns)
 
-        for idx, item in enumerate(media['images']):
+        for idx, item in enumerate(media['inputs']):
+            cache_data = [wandb.Image(item)]  # media/input
             predict = media['predictions'][idx]
             gt = media['truths'][idx]
+
             if self._label_mapping is not None:
-                predict = mapping_idx_label(predict, self._label_mapping)
                 gt = mapping_idx_label(gt, self._label_mapping)
-            summary_table.add_data(wandb.Image(item), gt, predict)
+                cache_data.append(gt)  # truth
+                if len(predict) > 1:
+                    max_predict = torch.max(predict.detach(), dim=0)[1]
+                    cache_data.append(mapping_idx_label(max_predict.item(), self._label_mapping))  # predictions
+                    for pred in predict:
+                        cache_data.append(pred.item())  # individual class score
+            else:
+                cache_data.extend([gt, torch.max(predict.detach(), dim=0)[1]])
+            summary_table.add_data(*cache_data)
         super()._log_media(tag=tag, media=summary_table)
 
 

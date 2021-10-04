@@ -48,6 +48,7 @@ class TextMonitorBase(Callback):
 
     def add_text(self):
         """Override function to customize task"""
+        self._add_text()
         pass
 
     def _add_text(self):

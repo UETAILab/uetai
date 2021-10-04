@@ -93,7 +93,6 @@ class ImageMonitorBase(Callback):
     def on_validation_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         if self._on_epoch:
             compressed_epoch = self._extract_epoch()
-            logger = trainer.logger
             self.add_image(tag='Valid/media_epoch', media=compressed_epoch, logger=trainer.logger)
             self._init_epoch()
 
@@ -135,7 +134,7 @@ class ImageMonitorBase(Callback):
             raise TypeError(f"Except `outputs` to be List or Dict, get {type(outputs)}")
 
         for idx, image in enumerate(tensor):
-            transformed_image = transforms.ToPILImage()(image).convert("RGB")  # WxH dimension
+            transformed_image = transforms.ToPILImage()(image)  # WxH dimension
             compressed_batch['inputs'].append(transformed_image)  # batch_size x W x H dimension
             compressed_batch['truths'].append(gt[idx].item())
             compressed_batch['predictions'].append(pred[idx])
@@ -156,24 +155,33 @@ class ImageMonitorBase(Callback):
 class ClassificationMonitor(ImageMonitorBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self._on_epoch and self._log_n_element_per_epoch is None:
+            warnings.warn("Monitoring all elements in epoch is not recommended")
         if self._label_mapping is None:
             warnings.warn("Classification callback should init with mapping rules. Missing `label_mapping`")
+        self.state = {"epoch": 0}
+        columns = ['id', 'image', 'truth', 'prediction']
+        if self._label_mapping is not None:
+            for id in range(len(self._label_mapping)):
+                mapped_id = mapping_idx_label(id, self._label_mapping)
+                columns.append("score_" + str(mapped_id))
+        self.train_summary_table = wandb.Table(columns=columns)
+        self.valid_summary_table = wandb.Table(columns=columns)
+
+    def on_train_epoch_end(
+        self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", unused: Optional = None
+    ) -> None:
+        self.state['epoch'] += 1
+        super().on_train_epoch_end(trainer, pl_module)
 
     def add_image(self, media: Dict[str, List], logger: Any, tag: str = 'Media',) -> None:
         """
         Override `add_image` method
         """
         # TODO: cache table or log table by epoch and merge for final report
-        data = []
-        columns = ['image', 'truth', 'prediction']
-        if self._label_mapping is not None:
-            for id in range(len(self._label_mapping)):
-                mapped_id = mapping_idx_label(id, self._label_mapping)
-                columns.append("score_" + str(mapped_id))
-        summary_table = wandb.Table(columns=columns)
-
         for idx, item in enumerate(media['inputs']):
-            cache_data = [wandb.Image(item)]  # media/input
+            id = f"{self.state['epoch']}_{idx}"
+            cache_data = [id, wandb.Image(item)]  # id + media/input
             predict = media['predictions'][idx]
             gt = media['truths'][idx]
 
@@ -187,8 +195,20 @@ class ClassificationMonitor(ImageMonitorBase):
                         cache_data.append(pred.item())  # individual class score
             else:
                 cache_data.extend([gt, torch.max(predict.detach(), dim=0)[1]])
-            summary_table.add_data(*cache_data)
-        _log_media(tag=tag, media=summary_table, logger=logger)
+
+            if 'Train' in tag:
+                self.train_summary_table.add_data(*cache_data)
+            else:
+                self.valid_summary_table.add_data(*cache_data)
+
+    def on_fit_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        super().on_fit_end(trainer, pl_module)
+        _log_media(tag='Train_media_epoch', media=self.train_summary_table, logger=trainer.logger)
+        _log_media(tag='Valid_media_epoch', media=self.valid_summary_table, logger=trainer.logger)
+
+    def on_keyboard_interrupt(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self.on_fit_end(trainer, pl_module)
+        trainer_finish_run(trainer)
 
 
 def mapping_idx_label(idx: int, label_mapping: Dict[int, str]):

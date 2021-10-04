@@ -55,8 +55,8 @@ class TestImageCallbacks(unittest.TestCase):
 
     @parameterized.expand([
         (ImageMonitorBase(on_step=True),),
-        (ClassificationMonitor(on_epoch=True),),
         (ImageMonitorBase(on_epoch=True, log_n_element_per_epoch=2),),
+        (ClassificationMonitor(on_epoch=True, label_mapping={i: str(i) for i in range(10)}),),
     ])
     def test_training_callbacks_by_epoch_n_step(self, monitor=None):
         sample_images = torch.rand(10, 3, 100, 100)
@@ -104,3 +104,4 @@ class TestImageCallbacks(unittest.TestCase):
             dataloader_idx=0
         )
         monitor.on_validation_epoch_end(trainer, None)
+        monitor.on_fit_end(trainer, None)

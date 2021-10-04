@@ -32,7 +32,6 @@ class ImageMonitorBase(Callback):
     ):
         super().__init__()
         self._log = False
-        self._trainer = pl.Trainer
         self._on_step = on_step
         self._on_epoch = on_epoch
         self._label_mapping = label_mapping
@@ -45,8 +44,7 @@ class ImageMonitorBase(Callback):
     def _init_epoch(self):
         self._epoch: Dict[str, List] = {'inputs': [], 'truths': [], 'predictions': []}
 
-    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
-        self._trainer = trainer
+    def on_train_start(self, trainer: 'pl.Trainer', pl_module: "pl.LightningModule") -> None:
         self._log = check_logger(trainer.logger)
         self._log_every_n_steps = self._log_every_n_steps or trainer.log_every_n_steps
         if not (self._on_step or self._on_epoch):
@@ -65,20 +63,18 @@ class ImageMonitorBase(Callback):
         In `add_image`, user should customize how they want image would be logged.
         In `ImageMonitorBase`, we only provide a simple logging demonstration.
         """
-        if not self._log:
-            return
-        compressed_batch: Dict[str, Any] = self._extract_output_and_batch(outputs, batch)
-        if self._on_step and (batch_idx + 1) % self._log_every_n_steps == 0:
-            self.add_image(tag='Train/media_step', media=compressed_batch)
+        if self._log:
+            compressed_batch: Dict[str, Any] = self._extract_output_and_batch(outputs, batch)
+            if self._on_step and (batch_idx + 1) % self._log_every_n_steps == 0:
+                self.add_image(tag='Train/media_step', media=compressed_batch, logger=trainer.logger)
 
     def on_train_epoch_end(
         self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", unused: Optional = None
     ) -> None:
-        if not self._on_epoch:
-            return
-        compressed_epoch = self._extract_epoch()
-        self.add_image(tag='Train/media_epoch', media=compressed_epoch)
-        self._init_epoch()
+        if self._on_epoch:
+            compressed_epoch = self._extract_epoch()
+            self.add_image(tag='Train/media_epoch', media=compressed_epoch, logger=trainer.logger)
+            self._init_epoch()
 
     def on_validation_batch_end(
         self,
@@ -89,23 +85,22 @@ class ImageMonitorBase(Callback):
         batch_idx: int,
         dataloader_idx: int,
     ) -> None:
-        if not self._log:
-            return
-        compressed_batch: Dict[str, Any] = self._extract_output_and_batch(outputs, batch)
-        if self._on_step and (batch_idx + 1) % self._log_every_n_steps == 0:
-            self.add_image(tag='Valid/media_step', media=compressed_batch)
+        if self._log:
+            compressed_batch: Dict[str, Any] = self._extract_output_and_batch(outputs, batch)
+            if self._on_step and (batch_idx + 1) % self._log_every_n_steps == 0:
+                self.add_image(tag='Valid/media_step', media=compressed_batchm, logger=trainer.logger)
 
     def on_validation_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
-        if not self._on_epoch:
-            return
-        compressed_epoch = self._extract_epoch()
-        self.add_image(tag='Valid/media_epoch', media=compressed_epoch)
-        self._init_epoch()
+        if self._on_epoch:
+            compressed_epoch = self._extract_epoch()
+            logger = trainer.logger
+            self.add_image(tag='Valid/media_epoch', media=compressed_epoch, logger=trainer.logger)
+            self._init_epoch()
 
     def on_keyboard_interrupt(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         trainer_finish_run(trainer=trainer)
 
-    def add_image(self, media: Dict[str, List], tag: str = 'Media',) -> None:
+    def add_image(self, media: Dict[str, List], logger: Any, tag: str = 'Media',) -> None:
         """Override this method to customize the logging of Image.
 
         :param media: Dictionary contains `images`, `truths` and `predictions` as key
@@ -124,9 +119,11 @@ class ImageMonitorBase(Callback):
                 gt = mapping_idx_label(gt, self._label_mapping)
             images.append(wandb.Image(item, caption=f'Truth: {gt} - Predict: {predict}'))
 
-        self._log_media(tag=tag, media=images)
+        self._log_media(tag=tag, media=images, logger=logger)
 
-    def _log_media(self, tag: str, media: Union[wandb.Image, wandb.Table, List[wandb.Image]], ) -> None:
+    def _log_media(
+        self, tag: str, logger: Any,
+        media: Union[wandb.Image, wandb.Table, List[wandb.Image]], ) -> None:
         """
         Log image(s) to Weight & Biases dashboard.
 
@@ -137,7 +134,7 @@ class ImageMonitorBase(Callback):
         """
         if wandb is None:
             raise ImportError("To log image with `wandb`, please it install with `pip install wandb`")
-        logger = self._trainer.logger
+        # logger = self._trainer.logger
         if isinstance(logger, SummaryWriter) and 'wandb' in logger.log_tool:
             if isinstance(media, wandb.Table):
                 tag = tag.replace('/', '_')
@@ -179,10 +176,11 @@ class ClassificationMonitor(ImageMonitorBase):
         if self._label_mapping is None:
             warnings.warn("Classification callback should init with mapping rules. Missing `label_mapping`")
 
-    def add_image(self, media: Dict[str, List], tag: str = 'Media',) -> None:
+    def add_image(self, media: Dict[str, List], logger: Any, tag: str = 'Media',) -> None:
         """
         Override `add_image` method
         """
+        # TODO: cache table or log table by epoch and merge for final report
         data = []
         columns = ['image', 'truth', 'prediction']
         if self._label_mapping is not None:
@@ -207,7 +205,7 @@ class ClassificationMonitor(ImageMonitorBase):
             else:
                 cache_data.extend([gt, torch.max(predict.detach(), dim=0)[1]])
             summary_table.add_data(*cache_data)
-        super()._log_media(tag=tag, media=summary_table)
+        super()._log_media(tag=tag, media=summary_table, logger=logger)
 
 
 def mapping_idx_label(idx: int, label_mapping: Dict[int, str]):

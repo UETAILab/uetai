@@ -101,7 +101,7 @@ view at http://localhost:6006/
         self.project = project
 
         self.experiment_name = "experiment" if experiment_name is None else experiment_name
-        self.experiment_name = self.experiment_name + datetime.datetime.now().strftime(" - %d/%m/%Y %H:%M:%S")
+        self.experiment_name = self.experiment_name + datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
         self.organization = organization
         self.opt = opt if opt is not None else None
 

@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pyversion: [ 3.6, 3.7 ]
+        pyversion: [ 3.6, 3.7, 3.8, 3.9 ]
 
     steps:
     - name: Check out Git repository
@@ -71,3 +71,38 @@ jobs:
         pip install pytest-cov parameterized 
         pytest tests --cov=src/ --cov-report=xml
         codecov
+        
+  defaults:
+    name: Release assets
+    needs: cov-test # we need to know the upload URL
+    runs-on: ${{ matrix.config.os }} # we run many different builds
+    strategy:
+      # just an example matrix
+      matrix:
+        config:
+          - os: ubuntu-latest
+          - os: macos-latest
+          - os: windows-latest
+        pyversion: [ 3.6, 3.7, 3.8, 3.9 ]
+    steps: 
+    - name: Check out Git repository
+      uses: actions/checkout@v2
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.pyversion }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip 
+        pip install pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+    - name: Run tests
+      env:
+        WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+      run: |
+        pip install -e file://$PWD/
+        pip install parameterized 
+        pytest tests

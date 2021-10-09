@@ -72,12 +72,11 @@ jobs:
         pytest tests --cov=src/ --cov-report=xml
         codecov
         
-  defaults:
-    name: Release assets
-    needs: cov-test # we need to know the upload URL
-    runs-on: ${{ matrix.config.os }} # we run many different builds
+  multi-platform:
+    name: Test multiple platform
+    needs: cov-test 
+    runs-on: ${{ matrix.config.os }}
     strategy:
-      # just an example matrix
       matrix:
         config:
           - os: ubuntu-latest
@@ -103,6 +102,7 @@ jobs:
       env:
         WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
       run: |
-        pip install -e file://$PWD/
-        pip install parameterized 
-        pytest tests
+        pip install -e .
+        pip install codecov
+        pip install pytest-cov parameterized 
+        pytest tests --cov=src/ --cov-report=xml

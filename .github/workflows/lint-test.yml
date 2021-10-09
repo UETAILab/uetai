@@ -1,5 +1,5 @@
 # flake8, black, pep8 tests
-name: Test
+name: Linting
 
 on:
   push:
@@ -42,67 +42,3 @@ jobs:
       uses: quentinguidee/pep8-action@v1
       with:
         arguments: '--max-line-length=160'
-
-  cov-test:
-    name: Coverage test
-    runs-on: ubuntu-latest
-
-    steps: 
-    - name: Check out Git repository
-      uses: actions/checkout@v2
-      
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip 
-        pip install pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        
-    - name: Run tests
-      env:
-        WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
-      run: |
-        pip install -e file://$PWD/
-        pip install codecov
-        pip install pytest-cov parameterized 
-        pytest tests --cov=src/ --cov-report=xml
-        codecov
-        
-  multi-platform:
-    name: Test multiple platform
-    needs: cov-test 
-    runs-on: ${{ matrix.config.os }}
-    strategy:
-      matrix:
-        config:
-          - os: ubuntu-latest
-          - os: macos-latest
-          - os: windows-latest
-        pyversion: [ 3.6, 3.7, 3.8, 3.9 ]
-    steps: 
-    - name: Check out Git repository
-      uses: actions/checkout@v2
-      
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.pyversion }}
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip 
-        pip install pytest
-        pip install -r requirements.txt
-        
-    - name: Run tests
-      env:
-        WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
-      run: |
-        pip install -e .
-        pip install codecov
-        pip install pytest-cov parameterized 
-        pytest tests --cov=src/ --cov-report=xml

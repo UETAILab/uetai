@@ -43,6 +43,7 @@ class SummaryWriter(LightningLoggerBase):
         program to call methods to add data to the file directly from the training
         loop, without slowing down training.
 
+
     .. example::
         .. code::python
         >>> logger = uetai.SummaryWriter(log_dir='demo')
@@ -276,6 +277,9 @@ view at http://localhost:6006/
             >>>                 dataset_name='mnist',
             >>>                 alias='latest')
         """
+        if self.is_github_action:
+            return DATASET_REGISTRY[dataset_name][version]
+
         if path.startswith("http"):
             root = Path("./datasets")
             root.mkdir(parents=True, exist_ok=True)  # create root

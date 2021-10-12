@@ -1,4 +1,8 @@
 """init public callbacks"""
-from .image_monitor import ImageMonitorBase
+from .image_monitor import ImageMonitorBase, ClassificationMonitor
 
-__all__ = ["ImageMonitorBase"]
+__all__ = [
+    # vision
+    "ImageMonitorBase",
+    "ClassificationMonitor",
+]

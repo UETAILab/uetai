@@ -1,3 +1,4 @@
+"""Summary Writer tests"""
 import os
 import shutil
 from unittest import TestCase
@@ -20,7 +21,7 @@ class TestSummaryWriter(TestCase):
 
     def test_un_support_logger_type(self):
         with self.assertRaises(Exception):
-            logger = SummaryWriter("uetai", log_tool="lcoal")
+            SummaryWriter("uetai", log_tool="lcoal")
 
     def test_watch(self):
         logger = SummaryWriter("uetai")
@@ -48,5 +49,5 @@ class TestSummaryWriter(TestCase):
 
     def test_data_path_url(self):
         logger = SummaryWriter("uetai")
-        data_dir = logger.data_path("https://data.deepai.org/mnist.zip")
+        data_dir = logger.data_path("https://file-examples-com.github.io/uploads/2017/02/zip_10MB.zip")
         self.assertTrue(os.path.exists(data_dir))

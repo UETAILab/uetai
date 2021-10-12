@@ -1,7 +1,4 @@
 """uetai utilities"""
-import sys
-import subprocess
-import argparse
 import socket
 import platform
 from pathlib import Path
@@ -71,16 +68,16 @@ def check_requirements(requirements='requirements.txt', exclude=()):
             pkg.require(package)
 
         # DistributionNotFound or VersionConflict if requirements not met
-        except Exception as expection:  # pragma: no cover
+        except Exception as exception:  # pragma: no cover
             print(
-                f"{prefix} {package} {expection} not found and is required, "
+                f"{prefix} {package} {exception} not found and is required, "
                 "attempting auto-update...")
             try:
                 assert check_online(), f"'pip install {package}' skipped (offline)"
                 print(check_output(f"pip install '{package}'", shell=True).decode())
                 number_of_package += 1
-            except Exception as expection:
-                print(f'{prefix} {expection}')
+            except Exception as exception:
+                print(f'{prefix} {exception}')
 
     if number_of_package:  # if packages updated
         source = file.resolve() if 'file' in locals() else requirements

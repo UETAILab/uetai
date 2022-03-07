@@ -27,29 +27,30 @@ if _COMET_AVAILABLE:
 
 
 class CometLogger(UetaiLoggerBase):
-    """Initialize CometLogger.
+    """CometLogger."""
+    def __init__(
+        self,
+        project_name: Optional[str] = 'UETAI_Project',
+        workspace: Optional[str] = None,
+        api_key: Optional[str] = None,
+    ):
+        """
         :params project_name: Name of the project.
         :type project_name: Optional[str]
         :params workspace: Name of the workspace.
         :type workspace: Optional[str]
         :params api_key: Comet API key of the user.
         :type api_key: Optional[str]
-    """
-    def __init__(
-        self,
-        project_name: str = 'UETAI_Project',
-        workspace: str = None,
-        api_key: str = None,
-    ):
+        """
         super().__init__()
         # TODO: Init experiment and collect metadata
         self.project_name = project_name
         self.workspace = workspace
         self.api_key = self._check_api_key(api_key)
-        self.experiment = self._init_experiment()
+        self.experiment = self._init_experiment()  # Experiment object
 
     # Initialize experiment -----------------------------------------------------------
-    def _init_experiment(self, ) -> Union[Experiment, None]:
+    def _init_experiment(self, ) -> Experiment:
         if not _COMET_AVAILABLE:
             raise ModuleNotFoundError(
                 "Comet_ml is not available. Try install with `pip install comet_ml`.")
@@ -88,7 +89,13 @@ class CometLogger(UetaiLoggerBase):
         :type step: int
         :params include_context: Whether to include context in the log.
         :type step: bool or str
+
+        ..note::
+            * If the data is a dictionary of floats, it will be logged as metrics.
+            * If the dictionary contains Tensor or PIL.Image, it will be logged as an image.
+            * If the dictionary contains str or another sub-dictionary, it will be logged as a text.
         """
+        # Log metrics
         all_metric = all(isinstance(value, float) for value in data.values())
         if all_metric:
             self.log_metrics(data, step=step)
@@ -99,23 +106,24 @@ class CometLogger(UetaiLoggerBase):
                 elif isinstance(val, (Image, Tensor)):
                     self.log_image(val, key, step)
                 elif isinstance(val, str):
-                    # TODO: Add metadata of the text (using JSON-encodable dict)
                     self.log_text(val, step)
+                elif isinstance(key, str) and isinstance(val, dict):
+                    self.log_text(key, step, val)
 
     def log_metric(self, metric_name: str, metric_value: float, step: Optional[int] = None):
         """Log a single metric to Comet.ml."""
         self.experiment.log_metric(metric_name, metric_value, step=step)
 
     def log_metrics(self, metrics: Dict[str, float], step: Optional[int] = None):
-        """Log metrics to Comet.ml"""
+        """Log metrics to Comet.ml."""
         self.experiment.log_metrics(metrics, step=step)
 
     def log_parameter(self, params: argparse.Namespace, *args, **kwargs):
-        """Log parameters to Comet.ml"""
+        """Log parameters to Comet.ml."""
         self.experiment.log_parameters(params, *args, **kwargs)
 
     def log_text(self, text: str, step: Optional[int] = None, metadata: Any = None):
-        """Log text to Comet.ml"""
+        """Log text to Comet.ml."""
         self.experiment.log_text(text, step, metadata)
 
     def log_image(

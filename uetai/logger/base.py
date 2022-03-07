@@ -1,9 +1,8 @@
 """Abstracts base class to build loggers."""
 
 import argparse
-import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, Optional
 
 
 class UetaiLoggerBase(ABC):
@@ -15,7 +14,6 @@ class UetaiLoggerBase(ABC):
         # self.logger.setLevel(logging.DEBUG)
         # self.logger.propagate = False
         # self.logger.handlers = []
-        pass
 
     @abstractmethod
     def log_metric(self, metric_name: str, metric_value: float, step: Optional[int] = None):
@@ -35,19 +33,20 @@ class UetaiLoggerBase(ABC):
         """
 
     @abstractmethod
-    def log_text(self):
+    def log_text(self, text, step, metadata):
         """Log text."""
 
     @abstractmethod
-    def log_image(self):
+    def log_image(self, image_data, name, step):
         """Log image."""
 
-    @abstractmethod
-    def log_graph(self):
-        """Log graph."""
+    # @abstractmethod
+    # def log_graph(self):
+    #     """Log graph."""
 
     @property
     def save_dir(self) -> Optional[str]:
+        """Return the experiment save directory."""
         return
 
     @property

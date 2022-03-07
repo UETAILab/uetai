@@ -1,4 +1,5 @@
 # base ===========
+Pillow
 torch>=1.6
 pytorch-lightning>=1.4.2
 

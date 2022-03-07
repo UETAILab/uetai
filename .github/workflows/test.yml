@@ -5,13 +5,13 @@ on:
     branches:
       - main
     paths:
-      - src
+      - uetai
       - tests
   pull_request:
     branches:
       - main
     paths:
-      - src
+      - uetai
       - tests
 jobs:
   cov-test:
@@ -40,7 +40,7 @@ jobs:
         pip install -e file://$PWD/
         pip install codecov
         pip install pytest-cov parameterized
-        pytest tests --cov=src/ --cov-report=xml
+        pytest tests --cov=uetai/ --cov-report=xml
         codecov
 
   multi-platform:
@@ -77,4 +77,4 @@ jobs:
         pip install -e .
         pip install codecov
         pip install pytest-cov parameterized
-        pytest tests --cov=src/ --cov-report=xml
+        pytest tests --cov=uetai/ --cov-report=xml

@@ -11,7 +11,7 @@ wandb>=0.11.2
 pyyaml>=5.4
 
 # callbacks ======
-torchvision # vision callback
+# torchvision # vision callback
 
 # cov-test =======
 # pytest>=5.3.2

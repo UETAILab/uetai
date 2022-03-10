@@ -1,11 +1,12 @@
 """Comet Logger customize by UETAI"""
-import argparse
 import os
 import getpass
 import logging
+import argparse
 from typing import Any, Dict, Optional, Union
 
 import PIL
+import yaml
 from PIL.Image import Image
 from torch import Tensor
 
@@ -14,6 +15,7 @@ from uetai.utilities import module_available
 
 log = logging.getLogger(__name__)
 _COMET_AVAILABLE = module_available("comet_ml")
+_SAVING_PATH = os.path.join(os.path.expanduser("~"), ".uetai")
 
 if _COMET_AVAILABLE:
     import comet_ml
@@ -43,11 +45,12 @@ class CometLogger(UetaiLoggerBase):
         :type api_key: Optional[str]
         """
         super().__init__()
-        # TODO: Init experiment and collect metadata
+        # TODO: Collect metadata with traceback
         self.project_name = project_name
         self.workspace = workspace
         self.api_key = self._check_api_key(api_key)
         self.experiment = self._init_experiment()  # Experiment object
+        self._experiment_path = self._set_experiment_path()
 
     # Initialize experiment -----------------------------------------------------------
     def _init_experiment(self, ) -> Experiment:
@@ -57,8 +60,8 @@ class CometLogger(UetaiLoggerBase):
         experiment = comet_ml.Experiment(self.project_name, self.api_key, self.workspace)
         return experiment
 
-    @staticmethod
-    def _check_api_key(api_key: str) -> str:
+    # @staticmethod
+    def _check_api_key(self, api_key: str) -> str:
         if api_key is None:
             if os.environ.get("COMET_API_KEY") is None:
                 api_key = getpass.getpass("Please enter your Comet API key: ")
@@ -66,8 +69,23 @@ class CometLogger(UetaiLoggerBase):
                 api_key = os.environ.get("COMET_API_KEY")
         else:
             os.environ["COMET_API_KEY"] = api_key
-            # TODO: save api_key to somewhere
+        self._save_api_key(api_key)
         return api_key
+
+    @staticmethod
+    def _save_api_key(api_key: str):
+        """Save api_key to ~/.uetai/user.yaml"""
+        api_key_path = os.path.join(_SAVING_PATH, "user.yaml")
+        # TODO: Save api_key with other user data in yaml file
+        with open(api_key_path, "w", encoding="utf8", errors="surrogateescape") as file:
+            yaml.dump({"COMET_API_KEY": api_key}, file)
+
+    def _set_experiment_path(self) -> str:
+        """Set experiment folder."""
+        experiment_path = os.path.join(_SAVING_PATH, self.experiment.get_name())
+        if not os.path.exists(experiment_path):
+            os.makedirs(experiment_path)
+        return experiment_path
 
     @property
     def name(self) -> str:

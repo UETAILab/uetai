@@ -5,8 +5,7 @@ from .base import UetaiLoggerBase
 
 __all__ = ["UetaiLoggerBase"]
 
-from .comet import _COMET_AVAILABLE, Comet_Logger
+from .comet import _COMET_AVAILABLE, CometLogger
 
 if _COMET_AVAILABLE:
-    __all__.append("Comet_Logger")
-
+    __all__.append("CometLogger")

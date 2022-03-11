@@ -1,5 +1,5 @@
 """
-Init SummaryWriter object
+Backup old SummaryWriter object
 """
 import os
 import zipfile

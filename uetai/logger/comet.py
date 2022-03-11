@@ -21,11 +21,11 @@ if _COMET_AVAILABLE:
     import comet_ml
     from comet_ml import Experiment
 
-    try:
-        from comet_ml.api import API
-    except ModuleNotFoundError:  # pragma: no-cover
-        # For more information, see: https://www.comet.ml/docs/python-sdk/releases/#release-300
-        from comet_ml.papi import API  # pragma: no-cover
+    # try:
+    #     from comet_ml.api import API
+    # except ModuleNotFoundError:  # pragma: no-cover
+    #     # For more information, see: https://www.comet.ml/docs/python-sdk/releases/#release-300
+    #     from comet_ml.papi import API  # pragma: no-cover
 
 
 class CometLogger(UetaiLoggerBase):
@@ -60,8 +60,8 @@ class CometLogger(UetaiLoggerBase):
         experiment = comet_ml.Experiment(self.project_name, self.api_key, self.workspace)
         return experiment
 
-    # @staticmethod
-    def _check_api_key(self, api_key: str) -> str:
+    @staticmethod
+    def _check_api_key(api_key: str) -> str:
         if api_key is None:
             if os.environ.get("COMET_API_KEY") is None:
                 api_key = getpass.getpass("Please enter your Comet API key: ")
@@ -69,22 +69,20 @@ class CometLogger(UetaiLoggerBase):
                 api_key = os.environ.get("COMET_API_KEY")
         else:
             os.environ["COMET_API_KEY"] = api_key
-        self._save_api_key(api_key)
-        return api_key
-
-    @staticmethod
-    def _save_api_key(api_key: str):
-        """Save api_key to ~/.uetai/user.yaml"""
-        api_key_path = os.path.join(_SAVING_PATH, "user.yaml")
-        # TODO: Save api_key with other user data in yaml file
+        # save api_key to file
+        api_key_path = os.path.join(_SAVING_PATH, "api_key.yaml")
         with open(api_key_path, "w", encoding="utf8", errors="surrogateescape") as file:
             yaml.dump({"COMET_API_KEY": api_key}, file)
+        return api_key
 
     def _set_experiment_path(self) -> str:
         """Set experiment folder."""
-        experiment_path = os.path.join(_SAVING_PATH, self.experiment.get_name())
+        experiment_path = os.path.join(_SAVING_PATH, self.experiment.id)
         if not os.path.exists(experiment_path):
             os.makedirs(experiment_path)
+        if os.path.exists('.gitignore'):
+            with open('.gitignore', 'a', encoding='utf8', errors="surrogateescape") as file:
+                file.write('\n' + '# CometML\n' + f'!{_SAVING_PATH}/*')
         return experiment_path
 
     @property
@@ -164,3 +162,41 @@ class CometLogger(UetaiLoggerBase):
             if image_data.size(-1) not in [1, 3]:
                 log.error("Image data is not a valid image.")
         self.experiment.log_image(image_data, name=name, step=step)
+
+    def log_artifact(
+        self,
+        artifact_path: str,
+        artifact_name: str = None,
+        artifact_type: str = None
+    ):
+        """Log artifact to Comet.ml storage"""
+        artifact = comet_ml.Artifact(name=artifact_name, artifact_type=artifact_type)
+        artifact_metadata = {
+            'artifact_name': artifact_name,
+            'artifact_type': artifact_type,
+            'artifact_path': artifact_path,
+            'artifact_version': artifact.version,
+            'experiment_name': self.experiment.get_name(),
+            'experiment_id': self.experiment.id,
+            'project_name': self.experiment.project_name,
+            'project_id': self.experiment.project_id,
+        }
+        # save artifact metadata to file
+        artifact_metadata_path = os.path.join(artifact_path, 'metadata.yaml')
+        with open(artifact_metadata_path, 'w', encoding='utf8', errors='surrogateescape') as file:
+            yaml.dump(artifact_metadata, file)
+        if os.path.exists(artifact_path):
+            artifact.add(local_path_or_data=artifact_path)
+        elif artifact_path.startswith("s3://"):
+            artifact.add_remote(uri=artifact_path)
+        elif artifact_path.startswith("https://drive.google.com/"):
+            artifact.add_remote(uri=artifact_path)
+        self.experiment.log_artifact(artifact)
+        return artifact
+
+    def download_artifact(self, artifact_name: str, save_path: str = None):
+        """Download artifact from Comet.ml storage
+            artifact_name format: "workspace/artifact-name:version_or_alias"
+        """
+        artifact = self.experiment.get_artifact(artifact_name)
+        artifact.download(save_path)

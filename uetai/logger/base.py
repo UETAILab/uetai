@@ -1,8 +1,7 @@
 """Abstracts base class to build loggers."""
 
-import argparse
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from typing import Any, Optional
 
 
 class UetaiLoggerBase(ABC):
@@ -20,11 +19,11 @@ class UetaiLoggerBase(ABC):
         """Log metric."""
 
     @abstractmethod
-    def log_metrics(self, metrics: Dict[str, float], step: Optional[int] = None):
+    def log_metrics(self, metrics: dict, step: Optional[int] = None):
         """Log metrics."""
 
     @abstractmethod
-    def log_parameter(self, params: argparse.Namespace, *args, **kwargs):
+    def log_parameters(self, params: Any, *args, **kwargs):
         """Record parameter.
         Args:
             params: :class:`~argparse.Namespace` containing the parameters

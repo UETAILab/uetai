@@ -18,6 +18,7 @@ def _package_available(package_name: str) -> bool:
 
 def module_available(module_path: str) -> bool:
     """Check if a module path is available in your environment.
+    Source: pytorch_lightning/utilities/imports.py
     >>> module_available('os')
     True
     >>> module_available('os.bla')

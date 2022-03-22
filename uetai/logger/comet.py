@@ -23,15 +23,15 @@ if not os.path.exists(_SAVING_PATH):
     os.makedirs(_SAVING_PATH, exist_ok=True)
 
 if _COMET_AVAILABLE:
+    # For more information about Comet auto logging, see:
+    # https://www.comet.ml/docs/python-sdk/advanced/#comet-auto-logging
+    os.environ['COMET_DISABLE_AUTO_LOGGING'] = '1'
     import comet_ml
     from comet_ml import Experiment
-
-    os.environ['COMET_DISABLE_AUTO_LOGGING'] = '1'
 
     # try:
     #     from comet_ml.api import API
     # except ModuleNotFoundError:  # pragma: no-cover
-    #     # For more information, see: https://www.comet.ml/docs/python-sdk/releases/#release-300
     #     from comet_ml.papi import API  # pragma: no-cover
 
 
@@ -227,7 +227,8 @@ class CometLogger(UetaiLoggerBase):
 
     # Custom logging function ----------------------------------------------------------
 
-    def _preprocess_image(self, image_data: Union[str, Tensor, Image, np.ndarray]) -> Image:
+    @staticmethod
+    def _preprocess_image(image_data: Union[str, Tensor, Image, np.ndarray]) -> Image:
         """Processing image to log image to Comet.ml.
         Image data can be a string, which direct points to an image file;
         or a numpy.ndarray or torch.Tensor, which will be converted to a PIL.Image.

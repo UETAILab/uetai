@@ -1,11 +1,9 @@
 """Testing UETAI Logger"""
 import os
-import logging
 import unittest
 
 import torch
 import numpy as np
-import pandas as pd
 from PIL import Image
 
 from uetai.logger import CometLogger
@@ -71,7 +69,7 @@ class TestCometLogger(unittest.TestCase):
         * table (str or pandas.DataFrame)
         * combine metric and media
         """
-        # Param list
+        # Metrics + image + text
         params = {'param_1': 1, 'param_2': 'nn.optim.Adam'}
         metrics = {'metric_1': 0.1, 'metric_2': 0.2}
         media = {

@@ -99,7 +99,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "UETAI"
-copyright = "2021, Nguyen Van Phi"
+copyright = "2021, UET-AILab"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -160,7 +160,7 @@ html_theme = "sphinx_typo3_theme"
 html_theme_options = {
     # "sidebar_width": "300px",
     # "page_width": "1200px",
-    "logo": "logo_light.png"
+    "logo": "/images/logo.png"
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -185,7 +185,7 @@ else:
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-# html_favicon = None
+html_favicon = '_static/images/logo_transparent.png'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -254,7 +254,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "user_guide.tex", "UETAI Documentation", "Nguyen Van Phi", "manual")
+    ("index", "user_guide.tex", "UETAI Documentation", "UET-AILab", "manual")
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

@@ -45,6 +45,7 @@ pip install uetai
 
 Or install from source repository:
 ```bash
+git clone git@github.com:UETAILab/uetai.git; cd uetai
 pip install -e .
 ```
 

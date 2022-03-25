@@ -1,6 +1,7 @@
 =====
 UETAI
 =====
+
 *Machine Learning analyzing and debugging tools integrated tracking experiment systems.*
 
 .. image:: https://codecov.io/gh/UETAILab/uetai/branch/main/graph/badge.svg?token=9KY7UU1QNB
@@ -28,9 +29,8 @@ with well-writen API and customable panel*
 Guides
 ======
 Starting to logging and debugging your model with :ref:`Quickstart <quickstart>`
-#. :ref:`Getting Started <quickstart>`
 
-TODO: Hyperlink to the guides
+- **Logging your Experiment**: Easy logging to your favourite dashboard with UETAI
 
 
 Tables of Contents

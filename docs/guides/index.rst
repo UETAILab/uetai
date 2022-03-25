@@ -1,9 +1,10 @@
 .. _guide:
+
 ======
 Guides
 ======
 
-Getting started with debugging and tracking experiment? Try the :ref:`getting-started`!
+Getting started with debugging and tracking experiment? Try the :ref:`quickstart`!
 
 .. toctree::
    :maxdepth: 2

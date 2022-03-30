@@ -55,6 +55,8 @@ see more supported types in below table.
     # Log your metrics
     logger.log({'loss'=loss, 'accuracy'=accuracy,}, step=step)
 
+    # Log your image
+    logger.log({'image': image_array}, step=step)
 
 Supported data types
 --------------------
@@ -85,3 +87,30 @@ However, you can still log it through dashboard's original API, example:
 +------------------+---------------+-------+------+-------+-------+
 | MLFlow           | ✗             | ✗     | ✗    | ✗     | ✗     |
 +------------------+---------------+-------+------+-------+-------+
+
+Versioning artifact
+===================
+
+Artifact is identified by name and their version. An artifact can be \
+a model checkpoint, a trained model, a dataset, etc which can have \
+multiple version and need to access for usage later.
+
+Every dashboard have their own ``Artifact`` instance which can be used to \
+reference to your specific artifact. We provide simple APIs to quickly \
+create, update new version, download or deletec your artifact's version.
+
+.. code-block:: python
+
+    # Create a new artifact and upload it
+    artifact = logger.log_artifact(
+        artifact_path="path/to/your/artifact",
+        artifact_name="your-artifact-name",
+        artifact_type="your-artifact-type",
+    )
+
+    # Download a specific version of artifact
+    save_path = logger.download_artifact(
+        artifact_name="your-artifact-name",
+        artifact_version=0.1,
+        save_path="path/to/save/artifact",
+    )

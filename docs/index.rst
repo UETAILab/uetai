@@ -30,7 +30,7 @@ Guides
 ======
 Starting to logging and debugging your model with :ref:`Quickstart <quickstart>`
 
-- **Logging your Experiment**: Easy logging to your favourite dashboard with UETAI
+- :ref:`Logging your Experiment <guides:tracking>`: Easy logging to your favourite dashboard with UETAI
 
 
 Tables of Contents

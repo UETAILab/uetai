@@ -299,3 +299,4 @@ class CometLogger(UetaiLoggerBase):
     #     """
     #     artifact = self.experiment.get_artifact(artifact_name)
     #     artifact.download(save_path)
+    #     return save_path

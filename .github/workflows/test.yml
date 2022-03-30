@@ -53,7 +53,7 @@ jobs:
           - os: ubuntu-latest
           - os: macos-latest
           - os: windows-latest
-        pyversion: [ 3.6, 3.7, 3.8, 3.9 ]
+        pyversion: [ 3.8, 3.9 ]
     steps:
     - name: Check out Git repository
       uses: actions/checkout@v2

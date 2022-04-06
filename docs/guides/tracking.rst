@@ -8,6 +8,27 @@ Experiment tracking
 
     We only integrated Comet ML as the dashboard for tracking experiment and logging media.
 
+Supported dashboard
+===================
+
+While some experiment tracking tools have different APIs and UI looks, they still 
+the same in somewhat. We are having plan to support some of very popular dashboard,
+such as:
+
++------------------+-----------+
+| Dashboard        | Supported |
++==================+===========+
+| Comet ML         | ✓         |
++------------------+-----------+
+| Weights & Biases | ✗         |
++------------------+-----------+
+| MLFlow           | ✗         |
++------------------+-----------+
+
+.. note::
+
+    We are working on supporting more dashboard in the near future. Stay tuned!
+
 Intergrating UETAI in your script
 =================================
 
@@ -82,10 +103,6 @@ However, you can still log it through dashboard's original API, example:
 | Dashboard        | Float metrics | Image | Text | Audio | Graph |
 +==================+===============+=======+======+=======+=======+
 | Comet ML         | ✓             | ✓     | ✓    | ✗     | ✗     |
-+------------------+---------------+-------+------+-------+-------+
-| Weights & Biases | ✗             | ✗     | ✗    | ✗     | ✗     |
-+------------------+---------------+-------+------+-------+-------+
-| MLFlow           | ✗             | ✗     | ✗    | ✗     | ✗     |
 +------------------+---------------+-------+------+-------+-------+
 
 Versioning artifact

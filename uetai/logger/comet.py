@@ -36,7 +36,28 @@ if _COMET_AVAILABLE:
 
 
 class CometLogger(UetaiLoggerBase):
-    """CometLogger."""
+    """CometLogger for logging experiment into Comet ML dashboard. We create a customed logger
+    for synchronized API between our supported dashboard. See supported dashboard/framework at 
+    :ref:`Quickstart <quickstart>`.
+
+    :params project_name: Name of the project.
+    :type project_name: Optional[str]
+    :params workspace: Name of the workspace.
+    :type workspace: Optional[str]
+    :params api_key: Comet API key of the user.
+    :type api_key: Optional[str]
+
+    .. note::
+        
+        * For more information about Comet auto logging, see: https://www.comet.ml/docs/
+        
+    .. code-block:: python
+
+        # from comet_ml import Experiment
+        from uetai.logger import CometLogger
+
+        logger = CometLogger(project_name='UETAI_Project')
+    """
 
     def __init__(
             self,
@@ -44,14 +65,6 @@ class CometLogger(UetaiLoggerBase):
             workspace: Optional[str] = None,
             api_key: Optional[str] = None,
     ):
-        """
-        :params project_name: Name of the project.
-        :type project_name: Optional[str]
-        :params workspace: Name of the workspace.
-        :type workspace: Optional[str]
-        :params api_key: Comet API key of the user.
-        :type api_key: Optional[str]
-        """
         super().__init__()
         # TODO: Collect metadata with traceback
         self.project_name = project_name
@@ -62,6 +75,7 @@ class CometLogger(UetaiLoggerBase):
 
     # Initialize experiment -----------------------------------------------------------
     def _init_experiment(self, ) -> Experiment:
+        """Initialize Comet ML experiment."""
         if not _COMET_AVAILABLE:
             raise ModuleNotFoundError(
                 "Comet_ml is not available. Try install with `pip install comet_ml`.")
@@ -73,6 +87,12 @@ class CometLogger(UetaiLoggerBase):
 
     @staticmethod
     def _check_api_key(api_key: str) -> str:
+        """Check API key from saved file, environment variable, or input.
+
+        :params api_key: API key of the user.
+        :type api_key: Optional[str].
+        :return: str.
+        """
         api_key_path = os.path.join(_SAVING_PATH, 'api_key.yaml')
         if api_key is None:
             if 'COMET_API_KEY' in os.environ:
@@ -91,13 +111,12 @@ class CometLogger(UetaiLoggerBase):
         return api_key
 
     def _set_experiment_path(self) -> str:
-        """Set experiment folder."""
+        """Set experiment folder.
+        :return: experiment folder.
+        """
         experiment_path = os.path.join(_SAVING_PATH, self.experiment.id)
         if not os.path.exists(experiment_path):
             os.makedirs(experiment_path)
-        # if os.path.exists('.gitignore'):
-        #     with open('.gitignore', 'a', encoding='utf8', errors="surrogateescape") as file:
-        #         file.write('\n' + '# CometML\n' + f'!{_SAVING_PATH}/*')
         return experiment_path
 
     @property
@@ -109,16 +128,19 @@ class CometLogger(UetaiLoggerBase):
 
     @property
     def save_dir(self) -> Optional[str]:
-        """Get experiment save directory."""
+        """Get experiment save directory.
+        :return: Experiment save directory.
+        """
         return self._experiment_path
 
     # Logging --------------------------------------------------------------------------
     def log(self, data: Any, step: Optional[int] = None):
         """Wizard to log data to Comet.ml dashboard. We supported following data types:
-        * Metrics: Dictionaries of metrics with keys as metric names and values as metric values.
-        * Image: Should be a numpy array or a PIL.Image or a torch.Tensor.
-        * Text: Dictionaries of text with keys as text names and values as metadata of text.
-        * Tables: Dictionaries of tables with keys as table names and values as the table.
+
+        - Metrics: Dictionaries of metrics with keys as metric names and values as metric values.
+        - Image: Should be a numpy array or a PIL.Image or a torch.Tensor.
+        - Text: Dictionaries of text with keys as text names and values as metadata of text.
+        - Tables: Dictionaries of tables with keys as table names and values as the table.
 
         :params data: Dictionary of metrics, media, text, graph to log.
         :type data: dict[str, Any]
@@ -198,19 +220,67 @@ class CometLogger(UetaiLoggerBase):
 
     def log_metric(self, metric_name: str, metric_value: float, step: Optional[int] = None):
         """Log a single metric to Comet.ml.
+        
+        :params metric_name: Metric name.
+        :type metric_name: str
+        :params metric_value: Metric value.
+        :type metric_value: float
+        :params step: Optional step to log.
+        :type step: int
+
+        .. note::
+            
+            See more: https://www.comet.ml/docs/python-sdk/Experiment/#experimentlog_metric
         """
         self.experiment.log_metric(metric_name, metric_value, step=step)
 
     def log_metrics(self, metrics: Dict[str, Any], step: Optional[int] = None):
-        """Log metrics to Comet.ml."""
+        """Log multiple metrics in form of dictionary to Comet.ml.
+        
+        :params metrics: Dictionary of metrics with keys as metric names and values as metric values.
+        :type metrics: dict[str, Any]
+        :params step: Optional step to log.
+        :type step: int
+
+        .. note::
+            
+            See more: https://www.comet.ml/docs/python-sdk/Experiment/#experimentlog_metrics
+        """
         self.experiment.log_metrics(metrics, step=step)
 
     def log_parameters(self, params: Any, *args, **kwargs):
-        """Log parameters to Comet.ml."""
+        """Log dictionary of parameters to Comet.ml.
+        
+        :params params: Parameters to log.
+        :type params: dict[str, Any]
+        :params args: Optional arguments.
+        :type args: list
+
+        .. note::
+            
+            See more: https://www.comet.ml/docs/python-sdk/Experiment/#experimentlog_parameters
+        """
         self.experiment.log_parameters(params, *args, **kwargs)
 
     def log_text(self, text: str, step: Optional[int] = None, metadata: Any = None):
-        """Log text to Comet.ml."""
+        """Log text into Text tab in Comet.ml dashboard.
+        
+        :params text: Text to log.
+        :type text: str
+        :params step: Optional step to log.
+        :type step: int
+        :params metadata: Optional metadata to log.
+        :type metadata: dict[str, Any]
+        
+        .. note:: 
+            
+            See more: https://www.comet.ml/docs/python-sdk/Experiment/#experimentlog_text
+
+        .. code-block:: python
+
+            # Log text & its metadata
+            logger.log_text('Hello world!', {'dialog': 'id1', 'topic': 'test'})
+        """
         self.experiment.log_text(text, step, metadata)
 
     def log_histogram_3d(self, histogram: Any, step: Optional[int] = None, metadata: Any = None):
@@ -218,24 +288,53 @@ class CometLogger(UetaiLoggerBase):
         self.experiment.log_histogram_3d(histogram, step, metadata)
 
     def log_html(self, html: str, clear=False):
-        """Log HTML to Comet.ml."""
+        """Log HTML to Comet.ml.
+
+        :params html: HTML to log.
+        :type html: str
+        :params clear: Optional flag to clear the HTML log.
+        :type clear: bool
+
+        .. note::
+            
+            See more: https://www.comet.ml/docs/python-sdk/Experiment/#experimentlog_html
+
+        .. code-block:: python
+
+            logger.log_html('<a href="www.comet.ml"> Test log html Comet.ml </a>')
+        """
         self.experiment.log_html(html, clear)
 
     def log_image(self, image_data: Any, name: str = None, step: Optional[int] = None):
-        """Log image to Comet.ml."""
+        """Log image to Comet.ml.
+        
+        :params image_data: Image data to log.
+        :type image_data: str, np.ndarray, torch.Tensor, PIL.Image.Image
+        :params name: Optional name of the image.
+        :type name: str
+
+        .. note::
+
+            See more: https://www.comet.ml/docs/python-sdk/Experiment/#experimentlog_image
+
+        .. code-block:: python
+
+            # Log image
+            logger.log_image(image_data=img, name='test_image', step=step)
+        """
         self.experiment.log_image(image_data, name=name, step=step)
 
     # Custom logging function ----------------------------------------------------------
 
     @staticmethod
     def _preprocess_image(image_data: Union[str, Tensor, Image, np.ndarray]) -> Image:
-        """Processing image to log image to Comet.ml.
+        """Validating image before log it to Comet.ml.
         Image data can be a string, which direct points to an image file;
-        or a numpy.ndarray or torch.Tensor, which will be converted to a PIL.Image.
+        or a numpy.ndarray or torch.Tensor, which be able to convert to a PIL.Image.
 
-        .. tip::
-            If you want to log a tensor, it should be in the shape of (C, H, W).
-            Otherwise, a numpy array should be in the shape of (H, W, C). (inverse of torch.Tensor)
+        .. note::
+            A torch.tensor should be in the shape of (C, H, W).
+            Otherwise, a numpy array should be in the shape of (H, W, C).
         """
         if isinstance(image_data, str):  # image path
             if not os.path.exists(image_data):

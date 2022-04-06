@@ -9,6 +9,7 @@ comment:
   require_head: yes
   branches:
     - "main"
+    - "new/*"
 
 coverage:
   status:
@@ -20,7 +21,7 @@ coverage:
         target: 100%
       source:
         paths:
-          - "sources"
+          - "src/"
         target: 90%
         threshold: 0.002
     patch:

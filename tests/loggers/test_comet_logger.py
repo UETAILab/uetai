@@ -6,7 +6,7 @@ import torch
 import numpy as np
 from PIL import Image
 
-from uetai.logger import CometLogger
+from src import CometLogger
 
 _SAVING_PATH = os.path.join(".uetai")
 

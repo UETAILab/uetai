@@ -2,7 +2,7 @@
 # import pytest
 import unittest
 from unittest import TestCase
-from uetai.utilities import module_available
+from src import module_available
 
 
 class TestUtilities(TestCase):

@@ -53,7 +53,7 @@ pip install -e .
 Importing and initialize your supported dashboard logger (for example: Comet ML) and start logging your experiment:
 
 ```python
-from uetai.logger import CometLogger
+from src import CometLogger
 
 logger = CometLogger(project_name="Uetai project")
 

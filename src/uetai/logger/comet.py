@@ -12,8 +12,8 @@ from PIL.Image import Image
 
 from torch import Tensor
 
-from uetai.logger.base import UetaiLoggerBase
-from uetai.utilities import module_available
+from src.uetai.logger.base import UetaiLoggerBase
+from src.uetai.utilities import module_available
 
 log = logging.getLogger(__name__)
 _COMET_AVAILABLE = module_available("comet_ml")

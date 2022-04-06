@@ -1,19 +1,11 @@
 # base ===========
-Pillow
 torch>=1.6
-pytorch-lightning>=1.4.2
-
-# setup & docs ===
-setuptools>=52.0.0
-sphinx>=2.2.0
+Pillow
 
 # logger =========
-wandb>=0.11.2
+# wandb>=0.11.2
+comet_ml
 pyyaml>=5.4
 
 # callbacks ======
 # torchvision # vision callback
-
-# cov-test =======
-# pytest>=5.3.2
-parameterized

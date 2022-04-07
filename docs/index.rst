@@ -16,22 +16,26 @@ UETAI
     :target: license
 
 
-UETAI is a customize PyTorch logger which will able to help users track machine learning experiment, \
+UETAI is a customize PyTorch logger which will able to help users track machine learning experiment,
 and esily debug raw datasets and trained models.
 
-UETAI provided tools for helping user tracking their experiment, visualizing the dataset, results, \
-and debuging the model (and the raw dataset also) with little effort by integrated the tools into \
+UETAI provided tools for helping user tracking their experiment, visualizing the dataset, results,
+and debuging the model (and the raw dataset also) with little effort by integrated the tools into
 the dashboards which users are using for logging.
 
-*In this beta version, we will only focus on integrated Comet ML, which is amazing dashboard \
-with well-writen API and customable panel*
+.. note:: 
+
+    *In this beta version, we will only focus on integrated Comet ML,
+    which is amazing dashboard with well-writen API and customable panel*
 
 Guides
 ======
 Starting to logging and debugging your model with :ref:`Quickstart <quickstart>`
 
-- :ref:`Logging your Experiment <guides/tracking>`: Easy logging to your favourite dashboard with UETAI
-
+- :ref:`Logging your Experiment <tracking>`: Easy logging to your favourite dashboard with UETAI.
+- :ref:`Visualizing and validating your Data <vis_data>`: Visualizing with you dashboard and gain 
+  insights with UETAI's analysis tools.
+- :ref:`Debugging your Model <debug_model>`: Debug your model with UETAI's explainable tools.
 
 Tables of Contents
 ==================
@@ -42,14 +46,14 @@ Tables of Contents
    Quickstart <start>
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: Getting Started
 
    Best Practises <practises/index>
    Guides <guides/index>
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: Advanced
 
    Reference <api/modules>

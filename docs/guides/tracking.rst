@@ -6,14 +6,15 @@ Experiment tracking
 
 .. note::
 
-    We only integrated Comet ML as the dashboard for tracking experiment and logging media.
+    We only integrated Comet ML as the dashboard for tracking experiment and
+    logging media.
 
 Supported dashboard
 ===================
 
-While some experiment tracking tools have different APIs and UI looks, they still 
-the same in somewhat. We are having plan to support some of very popular dashboard,
-such as:
+While some experiment tracking tools have different APIs and UI looks, they 
+still the same in somewhat. We are having plan to support some of very 
+dashboard, such as:
 
 +------------------+-----------+
 | Dashboard        | Supported |
@@ -32,16 +33,18 @@ such as:
 Intergrating UETAI in your script
 =================================
 
-We would like to introduce our very simple API to logging experiment and managing artifact \
-which has been customized from original framework's API and carefully tested.
+We would like to introduce our very simple API to logging experiment and 
+managing artifact which has been customized from original framework's API 
+and carefully tested.
 
 Initialize experiment
 ---------------------
 
-Initializing every dashboard's experiment and using all its API through object build \
-in ``uetai.logger``. While you call a new run at the top of your script, \
-**uetai** will automatically initialize a Experiment object which will create a local directory \
-to saved all log, files and streamed it to dashboard server (if the tools is hosted online).
+Initializing every dashboard's experiment and using all its API through object 
+build in ``uetai.logger``. While you call a new run at the top of your script,
+**uetai** will automatically initialize a Experiment object which will create a 
+local directory to saved all log, files and streamed it to dashboard server (if 
+the tools is hosted online).
 
 
 .. code-block:: python
@@ -55,34 +58,42 @@ to saved all log, files and streamed it to dashboard server (if the tools is hos
         workspace="your-workspace-name", 
     )
 
-.. note::
+.. tip::
 
-    To get your own ``API_KEY``, you need to sign up a `Comet ML <https://www.comet.ml/>`__ account, \
-    go to Setting> Developer Information> Generate API key and copy the key.
+    To get your own ``API_KEY``, you need to sign up a 
+    `Comet ML <https://www.comet.ml/>`__ account, go to 
+    Setting> Developer Information> Generate API key and copy the key.
 
 
 Logging your experiment
 -----------------------
 
-In order to log your metrics, metadata like loss, accuracy in training loop, use ``log()``.\
-You might find that different because we've re-designed your dashboard logging methods to \
-be more synchronous and easy to use. 
+In order to log your metrics, metadata like loss, accuracy in training loop, 
+use ``log()``. You might find that different because we've re-designed your 
+dashboard logging methods to be more synchronous and easy to use. 
 
-You can log pretty much anything you want, including images, videos, audio, text, \
-see more supported types in below table.
+``log()`` can be used to logged mupliple thing. See supported types in below 
+table.
 
 .. code-block:: python
 
-    # Log your metrics
+    # Logging your metrics
     logger.log({'loss'=loss, 'accuracy'=accuracy,}, step=step)
 
-    # Log your image
+    # Logging your image
     logger.log({'image': image_array}, step=step)
+
+    # Multiple logging
+    logger.log({
+        'loss': loss,
+        'accuracy': accuracy,
+        'image': image_array,
+    }, step=step)
 
 Supported data types
 --------------------
 
-We're still in developing progress, some data types might not be supported yet. \
+We're still in developing progress, some data types might not be supported yet.
 However, you can still log it through dashboard's original API, example:
 
 .. code-block:: python
@@ -105,29 +116,32 @@ However, you can still log it through dashboard's original API, example:
 | Comet ML         | ✓             | ✓     | ✓    | ✗     | ✗     |
 +------------------+---------------+-------+------+-------+-------+
 
-Versioning artifact
-===================
+..    Versioning artifact
+    ===================
 
-Artifact is identified by name and their version. An artifact can be \
-a model checkpoint, a trained model, a dataset, etc which can have \
-multiple version and need to access for usage later.
+    Artifact is identified by name and their version. An artifact can be
+    a model checkpoint, a trained model, a dataset, etc which can have
+    multiple version and need to access for usage later.
 
-Every dashboard have their own ``Artifact`` instance which can be used to \
-reference to your specific artifact. We provide simple APIs to quickly \
-create, update new version, download or deletec your artifact's version.
+    Every dashboard have their own ``Artifact`` instance which can be used to
+    reference to your specific artifact. We provide simple APIs to quickly
+    create, update new version, download or delete your artifact's version.
 
-.. code-block:: python
+    .. code-block:: python
 
-    # Create a new artifact and upload it
-    artifact = logger.log_artifact(
-        artifact_path="path/to/your/artifact",
-        artifact_name="your-artifact-name",
-        artifact_type="your-artifact-type",
-    )
+        # Create a new artifact and upload it
+        artifact = logger.log_artifact(
+            artifact_path="path/to/your/artifact",
+            artifact_name="your-artifact-name",
+            artifact_type="your-artifact-type",
+        )
 
-    # Download a specific version of artifact
-    save_path = logger.download_artifact(
-        artifact_name="your-artifact-name",
-        artifact_version=0.1,
-        save_path="path/to/save/artifact",
-    )
+        # Download a specific version of artifact
+        save_path = logger.download_artifact(
+            artifact_name="your-artifact-name",
+            artifact_version=0.1,
+            save_path="path/to/save/artifact",
+        )
+
+    .. tip::
+        Original API: https://www.comet.ml/docs/python-sdk/artifacts-overview/

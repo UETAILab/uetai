@@ -2,14 +2,13 @@ codecov:
   require_ci_to_pass: yes
 
 comment:
-  layout: "diff"
-  behavior: once
+  layout: "diff, files"
+  behavior: default
   require_changes: true
   require_base: yes
   require_head: yes
   branches:
     - "main"
-    - "new/*"
 
 coverage:
   status:

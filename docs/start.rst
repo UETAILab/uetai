@@ -10,23 +10,34 @@ helpful customizable panel and well-writen documentation.
 
 Log in or Sign up to `Comet ML <https://www.comet.ml/>`__ and start using tracking every though our library.
 
-.. note::
+.. tip::
+    
     Did you know that you can do pretty much everything you can with Comet ML using our **uetai**?
 
 Install uetai
 ===============
-Installing **uetai** with ``pip`` by running:
+To getting started with **uetai**, user can install with ``pip`` or install from
+original repository by run the following command:
 
-.. code-block:: bash
+.. tabs::
 
-    pip install uetai
+    .. group-tab:: Pip
 
-Or by clone the repository and run:
+        .. code-block:: bash
 
-.. code-block:: bash
+            pip install uetai
+        
+    .. group-tab:: Git repo
 
-    git clone git@github.com:UETAILab/uetai.git; cd uetai
-    pip install -e .
+        .. code-block:: bash
+
+            git clone git@github.com:UETAILab/uetai.git; cd uetai
+            pip install -e .
+
+.. attention:: 
+
+    While we are not automated publishing our library to PyPI, we *recommend* user install
+    through git repository.
 
 Start logging
 =============

@@ -82,6 +82,7 @@ extensions = [
     "sphinx.ext.ifconfig",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
+    "sphinx_tabs.tabs",
 ]
 
 autosummary_generate = True  # Turn on sphinx.ext.autosummary

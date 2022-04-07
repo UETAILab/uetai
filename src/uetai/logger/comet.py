@@ -12,8 +12,8 @@ from PIL.Image import Image
 
 from torch import Tensor
 
-from src.uetai.logger.base import UetaiLoggerBase
-from src.uetai.utilities import module_available
+from .base import UetaiLoggerBase
+from ..utilities import module_available
 
 log = logging.getLogger(__name__)
 _COMET_AVAILABLE = module_available("comet_ml")
@@ -93,6 +93,7 @@ class CometLogger(UetaiLoggerBase):
         :type api_key: Optional[str].
         :return: str.
         """
+        # TODO: check api_key is null ''
         api_key_path = os.path.join(_SAVING_PATH, 'api_key.yaml')
         if api_key is None:
             if 'COMET_API_KEY' in os.environ:
@@ -322,7 +323,7 @@ class CometLogger(UetaiLoggerBase):
             # Log image
             logger.log_image(image_data=img, name='test_image', step=step)
         """
-        self.experiment.log_image(image_data, name=name, step=step)
+        self.experiment.log_image(image_data=image_data, name=name, step=step)
 
     # Custom logging function ----------------------------------------------------------
 
@@ -332,15 +333,16 @@ class CometLogger(UetaiLoggerBase):
         Image data can be a string, which direct points to an image file;
         or a numpy.ndarray or torch.Tensor, which be able to convert to a PIL.Image.
 
-        .. note::
+        .. warning::
             A torch.tensor should be in the shape of (C, H, W).
             Otherwise, a numpy array should be in the shape of (H, W, C).
         """
+        # TODO: fix bug log image tensor, numpy array
         if isinstance(image_data, str):  # image path
             if not os.path.exists(image_data):
                 raise FileNotFoundError("Image path is not a valid image file.")
             return PIL.Image.open(image_data)
-        if isinstance(image_data, Tensor):
+        elif isinstance(image_data, Tensor):
             if image_data.ndimension() != 3:
                 raise ValueError("Tensor must be a 3D tensor.")
             # image shape must be (C, H, W) while C = 1, 3, 4 (RGBA)
@@ -348,13 +350,15 @@ class CometLogger(UetaiLoggerBase):
                 raise ValueError(f"Shape {image_data.size()} is invalid dimensions"
                                  f"for Tensor image data")
             image_data = image_data.permute(1, 2, 0).cpu().detach().numpy()  # (H, W, C)
-        else:  # np.ndarray (H, W, C) or (H, W)
+        elif isinstance(image_data, Image):
+            return image_data
+        else:  # np.ndarray (H, W, C)
             # check image shape is 2D or 3D array
             if image_data.ndim not in [2, 3]:
                 raise ValueError("Numpy array must be a 2D or 3D array.")
-            if image_data.shape[-1] not in [3, 4] and image_data.ndim == 3:
+            if image_data.shape[-1] not in [1, 3, 4] and image_data.ndim == 3:
                 raise ValueError(f"Shape {image_data.shape} is invalid dimensions"
-                                 f"for Tensor image data")
+                                 f"for np.ndarray image data")
         # squeeze channel if it is a single channel image
         image_data = np.squeeze(image_data) if image_data.ndim == 3 else image_data
         return PIL.Image.fromarray(image_data)  # convert to PIL.Image

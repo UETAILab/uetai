@@ -1,5 +1,6 @@
 # base ===========
 torch>=1.6
+numpy >=1.14
 Pillow
 
 # logger =========

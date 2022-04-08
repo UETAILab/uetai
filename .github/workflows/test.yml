@@ -2,14 +2,12 @@ name: Coverage and Test
 
 on:
   push:
-    branches:
-      - main
     paths:
-      - uetai
+      - src
       - tests
   pull_request:
     paths:
-      - uetai
+      - src
       - tests
 
 jobs:

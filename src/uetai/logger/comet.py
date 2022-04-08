@@ -36,7 +36,7 @@ if _COMET_AVAILABLE:
 
 
 class CometLogger(UetaiLoggerBase):
-    """CometLogger for logging experiment into Comet ML dashboard. We create a customed logger
+    """CometLogger for logging experiment into Comet ML dashboard. We create a customized logger
     for synchronized API between our supported dashboard. See supported dashboard/framework at 
     :ref:`Quickstart <quickstart>`.
 
@@ -60,10 +60,10 @@ class CometLogger(UetaiLoggerBase):
     """
 
     def __init__(
-            self,
-            project_name: Optional[str] = 'UETAI_Project',
-            workspace: Optional[str] = None,
-            api_key: Optional[str] = None,
+        self,
+        project_name: Optional[str] = 'UETAI_Project',
+        workspace: Optional[str] = None,
+        api_key: Optional[str] = None,
     ):
         super().__init__()
         # TODO: Collect metadata with traceback
@@ -104,8 +104,9 @@ class CometLogger(UetaiLoggerBase):
                         api_key = yaml.safe_load(file)['COMET_API_KEY']
                 except FileNotFoundError:
                     api_key = getpass.getpass("Please enter your Comet API key: ")
-        else:
-            os.environ["COMET_API_KEY"] = api_key
+                    if api_key == '':
+                        raise ValueError("Passes invalid API key.")
+
         # save api_key to file
         with open(api_key_path, "w", encoding="utf8", errors="surrogateescape") as file:
             yaml.dump({"COMET_API_KEY": api_key}, file)
@@ -136,7 +137,7 @@ class CometLogger(UetaiLoggerBase):
 
     # Logging --------------------------------------------------------------------------
     def log(self, data: Any, step: Optional[int] = None):
-        """Wizard to log data to Comet.ml dashboard. We supported following data types:
+        """Wizard to log data to Comet ml dashboard. We supported following data types:
 
         - Metrics: Dictionaries of metrics with keys as metric names and values as metric values.
         - Image: Should be a numpy array or a PIL.Image or a torch.Tensor.
@@ -197,7 +198,7 @@ class CometLogger(UetaiLoggerBase):
             elif isinstance(val, (str, np.ndarray, Tensor, Image)):
                 if isinstance(val, str) and imghdr.what(val) is None:
                     raise ValueError("Passed value is not a supported image type.")
-                img = self._preprocess_image(image_data=val)
+                img = self._preprocess_image(image_data=val)  # np.ndarray or PIL.Image or Tensor
                 self.log_image(name=key, image_data=img, step=step)
             elif isinstance(val, dict):
                 self.log_text(text=key, step=step, metadata=val)
@@ -264,7 +265,7 @@ class CometLogger(UetaiLoggerBase):
         self.experiment.log_parameters(params, *args, **kwargs)
 
     def log_text(self, text: str, step: Optional[int] = None, metadata: Any = None):
-        """Log text into Text tab in Comet.ml dashboard.
+        """Log text into Text tab in Comet ml dashboard.
         
         :params text: Text to log.
         :type text: str
@@ -313,6 +314,8 @@ class CometLogger(UetaiLoggerBase):
         :type image_data: str, np.ndarray, torch.Tensor, PIL.Image.Image
         :params name: Optional name of the image.
         :type name: str
+        :params step: Optional step to log.
+        :type step: int
 
         .. note::
 
@@ -361,7 +364,7 @@ class CometLogger(UetaiLoggerBase):
                                  f"for np.ndarray image data")
         # squeeze channel if it is a single channel image
         image_data = np.squeeze(image_data) if image_data.ndim == 3 else image_data
-        return PIL.Image.fromarray(image_data)  # convert to PIL.Image
+        return PIL.Image.fromarray(image_data.astype(np.uint8))  # convert to PIL.Image
 
     # Artifact functions -------------------------------------------------------------------
 

@@ -2,8 +2,8 @@
 # import pytest
 import unittest
 from unittest import TestCase
-from src import module_available
 
+from uetai.utilities import module_available
 
 class TestUtilities(TestCase):
     """Test utilities."""

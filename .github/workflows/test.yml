@@ -27,14 +27,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install pytest codecov pytest-cov parameterized
+        pip install -r requirements.txt
 
     - name: Run tests
       run: |
         pip install -e file://$PWD/
-        pip install codecov
-        pip install pytest-cov parameterized
         pytest tests --cov=uetai/ --cov-report=xml
 
     - name: "Upload coverage to Codecov"

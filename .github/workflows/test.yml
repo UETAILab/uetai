@@ -8,52 +8,21 @@ on:
       - uetai
       - tests
   pull_request:
-    branches:
-      - main
     paths:
       - uetai
       - tests
+
 jobs:
   cov-test:
     name: Coverage test
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Check out Git repository
-      uses: actions/checkout@v2
-
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-    - name: Run tests
-      env:
-        WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
-      run: |
-        pip install -e file://$PWD/
-        pip install codecov
-        pip install pytest-cov parameterized
-        pytest tests --cov=uetai/ --cov-report=xml
-        codecov
-
-  multi-platform:
-    name: Test multiple platform
-    needs: cov-test
     runs-on: ${{ matrix.config.os }}
     strategy:
       matrix:
         config:
-          - os: ubuntu-latest
-          - os: macos-latest
-          - os: windows-latest
+            - os: ubuntu-latest
+            - os: windows-latest
         pyversion: [ 3.8, 3.9 ]
+
     steps:
     - name: Check out Git repository
       uses: actions/checkout@v2
@@ -67,14 +36,16 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pytest
-        pip install -r requirements.txt
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Run tests
-      env:
-        WANDB_MODE: offline
-        WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
       run: |
-        pip install -e .
+        pip install -e file://$PWD/
         pip install codecov
         pip install pytest-cov parameterized
         pytest tests --cov=uetai/ --cov-report=xml
+
+    - name: "Upload coverage to Codecov"
+      uses: codecov/codecov-action@v2
+      with:
+        fail_ci_if_error: true

@@ -5,6 +5,7 @@ from unittest import TestCase
 
 from uetai.utilities import module_available
 
+
 class TestUtilities(TestCase):
     """Test utilities."""
     def test_utilities_import(self,):

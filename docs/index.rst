@@ -1,19 +1,64 @@
-.. include:: readme.rst
+=====
+UETAI
+=====
 
-Contents
-========
+*Machine Learning analyzing and debugging tools integrated tracking experiment systems.*
+
+.. image:: https://codecov.io/gh/UETAILab/uetai/branch/main/graph/badge.svg?token=9KY7UU1QNB
+    :target: codecov
+.. image:: https://github.com/UETAILab/uetai/actions/workflows/lint-test.yml/badge.svg
+    :target: linting
+.. image:: https://img.shields.io/pypi/v/uetai
+    :target: release_pypi
+.. image:: https://img.shields.io/pypi/pyversions/uetai
+    :target: py_ver
+.. image:: https://img.shields.io/github/license/UETAILab/uetai
+    :target: license
+
+
+UETAI is a customize PyTorch logger which will able to help users track machine learning experiment,
+and esily debug raw datasets and trained models.
+
+UETAI provided tools for helping user tracking their experiment, visualizing the dataset, results,
+and debuging the model (and the raw dataset also) with little effort by integrated the tools into
+the dashboards which users are using for logging.
+
+.. note:: 
+
+    *In this beta version, we will only focus on integrated Comet ML,
+    which is amazing dashboard with well-writen API and customable panel*
+
+Guides
+======
+Starting to logging and debugging your model with :ref:`Quickstart <quickstart>`
+
+- :ref:`Logging your Experiment <tracking>`: Easy logging to your favourite dashboard with UETAI.
+- :ref:`Visualizing and validating your Data <vis_data>`: Visualizing with you dashboard and gain 
+  insights with UETAI's analysis tools.
+- :ref:`Debugging your Model <debug_model>`: Debug your model with UETAI's explainable tools.
+
+Tables of Contents
+==================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
 
+   Quickstart <start>
 
-   Overview <readme>
-   Module Reference <api/modules>
-   Authors <authors>
-   Changelog <changelog>
-   License <license>
+.. toctree::
+   :maxdepth: 2
+   :caption: Getting Started
 
+   Best Practises <practises/index>
+   Guides <guides/index>
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Advanced
+
+   Reference <api/modules>
+   Release <release>
+   About us <about/index>
 
 Indices and tables
 ==================

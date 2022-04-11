@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pyversion: [ 3.6, 3.7, 3.8, 3.9 ]
+        pyversion: [3.8, 3.9]
 
     steps:
     - name: Check out Git repository
@@ -41,4 +41,4 @@ jobs:
     - name: PEP8 test
       uses: quentinguidee/pep8-action@v1
       with:
-        arguments: '--max-line-length=160'
+        arguments: '--max-line-length=127'

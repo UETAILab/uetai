@@ -2,8 +2,8 @@ codecov:
   require_ci_to_pass: yes
 
 comment:
-  layout: "diff"
-  behavior: once
+  layout: "diff, files"
+  behavior: default
   require_changes: true
   require_base: yes
   require_head: yes
@@ -20,7 +20,7 @@ coverage:
         target: 100%
       source:
         paths:
-          - "sources"
+          - "src/"
         target: 90%
         threshold: 0.002
     patch:

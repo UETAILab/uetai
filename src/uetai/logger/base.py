@@ -9,10 +9,7 @@ class UetaiLoggerBase(ABC):
 
     def __init__(self):
         """Initialize logger."""
-        # self.logger = logging.getLogger(name)
-        # self.logger.setLevel(logging.DEBUG)
-        # self.logger.propagate = False
-        # self.logger.handlers = []
+        pass
 
     @abstractmethod
     def log_metric(self, metric_name: str, metric_value: float, step: Optional[int] = None):
@@ -42,11 +39,6 @@ class UetaiLoggerBase(ABC):
     # @abstractmethod
     # def log_graph(self):
     #     """Log graph."""
-
-    @property
-    def save_dir(self) -> Optional[str]:
-        """Return the experiment save directory."""
-        return
 
     @property
     @abstractmethod

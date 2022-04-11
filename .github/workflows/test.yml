@@ -1,8 +1,14 @@
 name: Coverage and Test
 
 on:
-  - push
-  - pull_request
+  push:
+    paths:
+      - src
+      - tests
+  pull_request:
+    paths:
+      - src
+      - tests
 
 jobs:
   cov-test:

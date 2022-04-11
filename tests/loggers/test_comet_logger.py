@@ -70,7 +70,6 @@ class TestCometLogger(unittest.TestCase):
         * combine metric and media
         """
         # Metrics + image + text
-        params = {'param_1': 1, 'param_2': 'nn.optim.Adam'}
         metrics = {'metric_1': 0.1, 'metric_2': 0.2}
         media = {
             'numpy_image': np.random.rand(16, 16) * 255,
@@ -89,10 +88,6 @@ class TestCometLogger(unittest.TestCase):
         # Test logging function
         logger = CometLogger(workspace=self.workspace, api_key=self.api_key)
 
-        logger.log_parameters(params)
-        for param, val in params.items():
-            self.assertEqual(logger.experiment.get_parameter(param), val)
-
         logger.log(metrics, step=1)
         for metric, val in metrics.items():
             self.assertEqual(logger.experiment.get_metric(metric), val)
@@ -110,11 +105,44 @@ class TestCometLogger(unittest.TestCase):
                 # self.assertLess(len(captured.output), 1)  # expect no ERROR at all
 
         # TODO: test with combine metric and media
-        # TODO: test with wrong type
 
-        logger.experiment.end()
+        wrong_type = [
+            [1],  # int
+            {},  # empty dict
+            {1, 2, 3},  # set
+            {1: 'a', 2: 'b'}  # dict with non-str key
+        ]
+        for item in wrong_type:
+            with self.assertRaises(ValueError):
+                logger.log(item, step=1)
 
-    # TODO: test preprocess_image function
+    def test_logger_preprocess_image(self, ):
+        """Test CometLogger preprocess_image function."""
+        pass
+
+    def test_logger_override_function(self):
+        """Test CometLogger override original function."""
+        img = np.random.randint(0, 255, size=(16, 16, 3), dtype=np.uint8)
+        params = {'lr': 1e-5, 'optim': 'nn.optim.Adam'}
+        text = 'This is a sample text'
+        html = '<h1>This is a sample html</h1>'
+        hist = np.random.normal(170, 10, 250)
+
+        logger = CometLogger(workspace=self.workspace, api_key=self.api_key)
+
+        logger.log_parameters(params)
+        for param, val in params.items():
+            self.assertEqual(logger.experiment.get_parameter(param), val)
+
+        logger.log_metric('recall', 0.1, step=1)
+        logger.log_metrics({'loss': 0.1, 'acc': 0.9}, step=1)
+        for metric, val in {'recall': 0.1, 'loss': 0.1, 'acc': 0.9}.items():
+            self.assertEqual(logger.experiment.get_metric(metric), val)
+
+        logger.log_text(text, step=1)
+        logger.log_image(img, step=1)
+        logger.log_html(html)
+        logger.log_histogram_3d(hist)
 
 
 if __name__ == '__main__':

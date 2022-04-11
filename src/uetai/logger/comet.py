@@ -181,7 +181,7 @@ class CometLogger(UetaiLoggerBase):
             if all(isinstance(item, str) for item in data):  # set of strings
                 self._log_set(data, step)
             else:
-                raise ValueError("Value passed must be a string or a pandas.DataFrame.")
+                raise ValueError("Value passed must be a string.")
 
         else:  # for dict
             if any(not isinstance(key, str) for key in data.keys()):

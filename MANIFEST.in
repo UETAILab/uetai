@@ -1,0 +1,13 @@
+# Requirements
+include requirements*.txt
+
+# Include license, Readme, etc.
+include LICENSE
+include *.md
+
+# Exclude development, docs, testing and example code
+include Makefile make.bat
+exclude docs examples tests
+recursive-exclude docs *
+recursive-exclude examples *
+recursive-exclude tests *

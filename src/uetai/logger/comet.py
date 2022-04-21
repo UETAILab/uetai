@@ -93,7 +93,6 @@ class CometLogger(UetaiLoggerBase):
         :type api_key: Optional[str].
         :return: str.
         """
-        # TODO: check api_key is null ''
         api_key_path = os.path.join(_SAVING_PATH, 'api_key.yaml')
         if api_key is None:
             if 'COMET_API_KEY' in os.environ:
@@ -340,7 +339,6 @@ class CometLogger(UetaiLoggerBase):
             A torch.tensor should be in the shape of (C, H, W).
             Otherwise, a numpy array should be in the shape of (H, W, C).
         """
-        # TODO: fix bug log image tensor, numpy array
         if isinstance(image_data, str):  # image path
             if not os.path.exists(image_data):
                 raise FileNotFoundError("Image path is not a valid image file.")

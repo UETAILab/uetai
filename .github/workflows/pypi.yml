@@ -31,7 +31,7 @@ jobs:
       run: |
          pip install --upgrade pip
          pip install -r requirements.txt
-         python3 -m pip install --upgrade build twine
+         python3 -m pip install --upgrade build twine wheel
 
     - name: Make distribution
       run: |

@@ -1,7 +1,7 @@
 <div align="center">
 
 <p align="center">
-  <img src="docs\_static\images\logo.png" width="220px" alt="logo">
+  <img src="https://github.com/UETAILab/uetai/blob/main/docs/_static/images/logo.png?raw=true" width="220px" alt="logo">
 </p>
 
 **Machine Learning tracking experiment and debugging tools.**

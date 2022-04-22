@@ -30,7 +30,7 @@ jobs:
     - name: Install pip dependencies
       run: |
          pip install --upgrade pip
-         pip install -r requirements.txt
+         pip install -r requirements-dev.txt
          python3 -m pip install --upgrade build twine wheel
 
     - name: Make distribution

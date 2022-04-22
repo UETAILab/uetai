@@ -1,0 +1,24 @@
+# Requirements-dev.txt contains requirements.txt
+# base ===========
+torch>=1.6
+numpy >=1.14
+Pillow
+
+# logger =========
+wandb
+comet_ml
+pyyaml>=5.4
+
+# build ==========
+twine
+build
+wheel
+
+# test ===========
+pytest
+codecov
+pytest-cov
+parameterized
+
+# callbacks ======
+# torchvision

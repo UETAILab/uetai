@@ -1,4 +1,4 @@
-"""Comet Logger customize by UETAI"""
+"""Custom Comet Logger by UETAI"""
 import os
 import getpass
 import logging
@@ -15,7 +15,7 @@ from torch import Tensor
 from .base import UetaiLoggerBase
 from ..utilities import module_available
 
-log = logging.getLogger(__name__)
+
 _COMET_AVAILABLE = module_available("comet_ml")
 _SAVING_PATH = ".uetai"
 
@@ -64,17 +64,18 @@ class CometLogger(UetaiLoggerBase):
         project_name: Optional[str] = 'UETAI_Project',
         workspace: Optional[str] = None,
         api_key: Optional[str] = None,
+        **kwargs,
     ):
         super().__init__()
         # TODO: Collect metadata with traceback
         self.project_name = project_name
         self.workspace = workspace
         self.api_key = self._check_api_key(api_key)
-        self.experiment = self._init_experiment()  # Experiment object
+        self.experiment = self._init_experiment(**kwargs)  # Experiment object
         self._experiment_path = self._set_experiment_path()
 
     # Initialize experiment -----------------------------------------------------------
-    def _init_experiment(self, ) -> Experiment:
+    def _init_experiment(self, **kwargs) -> Experiment:
         """Initialize Comet ML experiment."""
         if not _COMET_AVAILABLE:
             raise ModuleNotFoundError(
@@ -82,7 +83,7 @@ class CometLogger(UetaiLoggerBase):
         experiment = comet_ml.Experiment(
             project_name=self.project_name,
             api_key=self.api_key,
-            workspace=self.workspace, )
+            workspace=self.workspace, **kwargs)
         return experiment
 
     @staticmethod

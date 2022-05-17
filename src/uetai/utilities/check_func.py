@@ -1,10 +1,7 @@
 """checking function"""
 import sys
-import logging
 import subprocess
-
-
-log = logging.getLogger('UETAI')
+import warnings
 
 
 def _check_version(name):
@@ -34,6 +31,6 @@ def check_uetai_version():
     :return: True if version is up-to-date
     """
     if not _check_version('uetai'):
-        log.info('`uetai` package is out of date, please run `pip install --upgrade uetai`')
+        warnings.warn('current `uetai` package is out of date, please run `pip install --upgrade uetai`')
         return False
     return True

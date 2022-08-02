@@ -9,12 +9,15 @@ from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from uetai.callbacks import ImageMonitorBase, ClassificationMonitor
 from uetai.logger import WandbLogger
 
+import os
+
 
 class TestImageCallbacks(unittest.TestCase):
     """Image callbacks test"""
 
     def __init__(self, *args, **kwargs):
         super(TestImageCallbacks, self).__init__(*args, **kwargs)
+        os.environ['WANDB_API_KEY'] = '761fd4e45e2fc234ea9041dd463a98ab81979af1'
         self.logger = WandbLogger(project_name='uetai')
 
     def test_base_log_interval_override(self, log_every_n_steps=1):

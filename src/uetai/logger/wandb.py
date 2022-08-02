@@ -43,12 +43,10 @@ class WandbLogger(UetaiLoggerBase):
         self.workspace = workspace
         self._experiment = experiment
         self._name = name
-        self._wandb_init = dict(
-            **kwargs
-        )
-        self._wandb_init.update(**kwargs)
+        self._wandb_init = dict(**kwargs)
         if api_key:
-            os.environ["WANDB_API_KEY"] = api_key
+            wandb.login(key=api_key)
+        self._wandb_init.update(**kwargs)
         self.experiment = self._init_experiment(**self._wandb_init)
         self._experiment_path = self._set_experiment_path()
         self._train_table_summary, self._valid_table_summary = self._set_visualize_table()

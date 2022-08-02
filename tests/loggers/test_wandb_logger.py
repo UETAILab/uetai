@@ -13,9 +13,8 @@ class TestWandbLogger(unittest.TestCase):
     """Test WandbLogger."""
 
     def setUp(self) -> None:
-        self.workspace = "uetai_tester"
-        self.api_key = "761fd4e45e2fc234ea9041dd463a98ab81979af1"
-        os.environ['WANDB_API_KEY'] = self.api_key
+        self.workspace = "uetai"
+        os.environ['WANDB_API_KEY'] = '761fd4e45e2fc234ea9041dd463a98ab81979af1'
         self.logger = WandbLogger(workspace=self.workspace)
 
     def test_logger_log(self):

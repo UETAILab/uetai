@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="docsearch:name" content="UETAI" />
+    <meta name="docsearch:package_type" content="" />
+    <meta name="docsearch:release" content="" />
+    <meta name="docsearch:version" content="" />
+
+    <title>Experiment tracking &mdash; UETAI  documentation</title>
+
+    <link rel="shortcut icon" href="../_static/logo_transparent.png" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/fontawesome.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/webfonts.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+<!-- linktags -->
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="UETAI  documentation" href="#" />
+    <link rel="up" title="Guides" href="index.html" />
+    <link rel="next" title="Data Visualization" href="vis_data.html" />
+    <link rel="prev" title="Guides" href="index.html" />
+<!-- /linktags -->
+<!-- extrahead --><!-- /extrahead -->
+    <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body>
+
+    <div class="page">
+
+        <div class="page-header">
+            <div class="page-header-inner">
+<!--block pageheader-->
+<div class="row">
+    <div class="col-sm-6 col-lg-7">
+
+        <div class="logo">
+        <a href="https://docs.typo3.org/" title="TYPO3 Documentation" >
+
+            <img src="../_static//images/logo.png" width="484" height="130" alt="TYPO3 Logo" class="logo-image" />
+        </a>
+        </div>
+    </div><!--/.col-x-->
+    <div class="col-sm-6 col-lg-5">
+        <div role="search">
+            
+            <!--form global search-->
+        </div>
+    </div><!--/.col-x-->
+</div><!--/.row-->
+<!--/block pageheader-->
+            </div><!--/.page-header-inner-->
+        </div><!--/.page-header-->
+
+        
+
+        <div class="page-main">
+            <div class="page-main-inner">
+                <div class="page-main-navigation">
+                    <nav>
+                        <input type="checkbox" id="toggleToc" class="toc-checkbox">
+                        <div class="toc-header"><div class="toc-title">
+                                    <a class="toc-title-project" href="../index.html">UETAI</a></div><div class="toc-actions">
+                                <label for="toggleToc" class="toc-toggle">
+                                    Menu
+                                </label>
+                            </div>
+                        </div>
+                        <div class="toc-collapse">
+<!-- searchbox.html -->
+<div id="searchbox" class="toc-search" role="search">
+    <form id="search-form" action="../search.html" autocomplete="off" method="get">
+        <input class="form-control" type="text" name="q" placeholder="Search this project" aria-label="Search this project" id="searchinput" />
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<!-- /searchbox.html -->
+                            <div class="toc" role="navigation" aria-label="main navigation">
+<!-- menu -->
+                                        <ul>
+<li class="toctree-l1"><a class="reference internal" href="../start.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../practises/index.html">Best Practises</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../practises/exp_tracking.html">Logging your experiment with UETAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../practises/valid_data.html">Validate dataset with UETAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../practises/debug_model.html">Debugging model with UETAI</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Guides</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Experiment Tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vis_data.html">Data Visualization</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/uetai.html">uetai package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/uetai.callbacks.html">uetai.callbacks package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/uetai.logger.html">uetai.logger package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/uetai.utilities.html">uetai.utilities package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release.html">Release</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about/index.html">About us</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../about/authors.html">Our team</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../about/fqa.html">Users FQA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../about/license.html">License</a></li>
+</ul>
+</li>
+</ul>
+
+                                    <p class="caption"><span class="caption-text">PAGE CONTENTS</span></p>
+                                    <ul>
+<li><a class="reference internal" href="#">Experiment tracking</a><ul>
+<li><a class="reference internal" href="#supported-dashboard">Supported dashboard</a></li>
+<li><a class="reference internal" href="#intergrating-uetai-in-your-script">Intergrating UETAI in your script</a><ul>
+<li><a class="reference internal" href="#initialize-experiment">Initialize experiment</a></li>
+<li><a class="reference internal" href="#logging-your-experiment">Logging your experiment</a></li>
+<li><a class="reference internal" href="#supported-data-types">Supported data types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<!-- /menu -->
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+                <div class="page-main-content">
+                    <div class="rst-content">
+<!-- pager-hidden.html -->
+
+        <a class="no-focus" accesskey="p" href="index.html" tabindex="-1"></a>
+        <a class="no-focus" accesskey="n" href="vis_data.html" tabindex="-1"></a>
+<!-- /pager-hidden.html -->
+<!-- breadcrumbs.html -->
+<div class="breadcrumb-bar" role="navigation" aria-label="breadcrumbs navigation">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="../index.html">Start</a></li>
+            <li class="breadcrumb-item"><a href="index.html">Guides</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Experiment tracking</li>
+    </ol>
+    <div class="breadcrumb-additions">
+        <a class="btn btn-sm btn-light" href="../_sources/guides/tracking.rst.txt" rel="nofollow">
+            <span class="btn-icon"><span class="fas fa-code"></span></span>
+            <span class="btn-text">View source</span>
+        </a>
+    </div>
+</div>
+<!-- /breadcrumbs.html -->
+<!-- displaysettingsui.html -->
+<div id="displaysettingsui" class="displaysettingsui">
+<div class="dsDivCogwheel"><i id="dsCogwheel" class="fas fa-cog" title="Display settings"></i></div>
+<div id="dsPanel" class="dsPanel" ><p><b>Display settings</b></p>
+<input type="checkbox" id="cbFullWidth"><label for="cbFullWidth">Use full width</label><br>
+<input type="checkbox" id="cbPermanent"><label for="cbPermanent">Make settings permanent</label><br>
+</div><!--/.dsPanel-->
+</div><!--/.displaysettingsui-->
+<!-- /displaysettingsui.html -->
+<!-- versionhints.html -->
+<div class="version-hints">
+
+    <div class="version-hints-inner" data-run-ajax="no">
+<!--filled from _static/ajax-version-hints.html-->
+</div><!--/.version-hints-inner-->
+</div><!--/.version-hints-->
+<!-- /versionhints.html -->
+                        <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+                            <div itemprop="articleBody">
+<!-- body -->
+    <section id="experiment-tracking">
+<span id="tracking"></span><h1>Experiment tracking<a class="headerlink" href="#experiment-tracking" title="Permalink to this heading">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We only integrated Comet ML as the dashboard for tracking experiment and
+logging media.</p>
+</div>
+<section id="supported-dashboard">
+<h2>Supported dashboard<a class="headerlink" href="#supported-dashboard" title="Permalink to this heading">¶</a></h2>
+<p>While some experiment tracking tools have different APIs and UI looks, they
+still the same in somewhat. We are having plan to support some of very
+dashboard, such as:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Dashboard</p></th>
+<th class="head"><p>Supported</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Comet ML</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p>Weights &amp; Biases</p></td>
+<td><p>✗</p></td>
+</tr>
+<tr class="row-even"><td><p>MLFlow</p></td>
+<td><p>✗</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We are working on supporting more dashboard in the near future. Stay tuned!</p>
+</div>
+</section>
+<section id="intergrating-uetai-in-your-script">
+<h2>Intergrating UETAI in your script<a class="headerlink" href="#intergrating-uetai-in-your-script" title="Permalink to this heading">¶</a></h2>
+<p>We would like to introduce our very simple API to logging experiment and
+managing artifact which has been customized from original framework’s API
+and carefully tested.</p>
+<section id="initialize-experiment">
+<h3>Initialize experiment<a class="headerlink" href="#initialize-experiment" title="Permalink to this heading">¶</a></h3>
+<p>Initializing every dashboard’s experiment and using all its API through object
+build in <code class="docutils literal notranslate"><span class="pre">uetai.logger</span></code>. While you call a new run at the top of your script,
+<strong>uetai</strong> will automatically initialize a Experiment object which will create a
+local directory to saved all log, files and streamed it to dashboard server (if
+the tools is hosted online).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uetai.logger</span> <span class="kn">import</span> <span class="n">CometLogger</span>
+
+<span class="c1"># Initialize experiment</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">CometLogger</span><span class="p">(</span>
+    <span class="n">project_name</span><span class="o">=</span><span class="s2">&quot;your-project-name&quot;</span><span class="p">,</span>
+    <span class="n">api_key</span><span class="o">=</span><span class="s2">&quot;your-api-key&quot;</span><span class="p">,</span>
+    <span class="n">workspace</span><span class="o">=</span><span class="s2">&quot;your-workspace-name&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>To get your own <code class="docutils literal notranslate"><span class="pre">API_KEY</span></code>, you need to sign up a
+<a class="reference external" href="https://www.comet.ml/">Comet ML</a> account, go to
+Setting&gt; Developer Information&gt; Generate API key and copy the key.</p>
+</div>
+</section>
+<section id="logging-your-experiment">
+<h3>Logging your experiment<a class="headerlink" href="#logging-your-experiment" title="Permalink to this heading">¶</a></h3>
+<p>In order to log your metrics, metadata like loss, accuracy in training loop,
+use <code class="docutils literal notranslate"><span class="pre">log()</span></code>. You might find that different because we’ve re-designed your
+dashboard logging methods to be more synchronous and easy to use.</p>
+<p><code class="docutils literal notranslate"><span class="pre">log()</span></code> can be used to logged mupliple thing. See supported types in below
+table.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Logging your metrics</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">({</span><span class="s1">&#39;loss&#39;</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="s1">&#39;accuracy&#39;</span><span class="o">=</span><span class="n">accuracy</span><span class="p">,},</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+
+<span class="c1"># Logging your image</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">({</span><span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">image_array</span><span class="p">},</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+
+<span class="c1"># Multiple logging</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">({</span>
+    <span class="s1">&#39;loss&#39;</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span>
+    <span class="s1">&#39;accuracy&#39;</span><span class="p">:</span> <span class="n">accuracy</span><span class="p">,</span>
+    <span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">image_array</span><span class="p">,</span>
+<span class="p">},</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="supported-data-types">
+<h3>Supported data types<a class="headerlink" href="#supported-data-types" title="Permalink to this heading">¶</a></h3>
+<p>We’re still in developing progress, some data types might not be supported yet.
+However, you can still log it through dashboard’s original API, example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get experiment object</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">get_experiment</span><span class="p">()</span>
+
+<span class="c1"># Using original API</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">log_confusion_matrix</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;one&quot;</span><span class="p">,</span> <span class="s2">&quot;two&quot;</span><span class="p">,</span> <span class="s2">&quot;three&quot;</span><span class="p">],</span>
+    <span class="n">matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">]]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Currently supported data types</strong>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Dashboard</p></th>
+<th class="head"><p>Float metrics</p></th>
+<th class="head"><p>Image</p></th>
+<th class="head"><p>Text</p></th>
+<th class="head"><p>Audio</p></th>
+<th class="head"><p>Graph</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Comet ML</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✗</p></td>
+<td><p>✗</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+
+<!-- /body -->
+                            </div>
+                        </div>
+<!-- pager.html -->
+<nav aria-label="Page navigation example">
+    <ul class="pagination justify-content-center">
+        <li class="page-item">
+            <a class="page-link" href="index.html" title="Accesskey Alt(+Shift)+p">
+                Previous
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="vis_data.html" title="Accesskey Alt(+Shift)+n">
+                Next
+            </a>
+        </li>
+        
+    </ul>
+</nav>
+<!-- /pager.html -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+
+        <div class="page-footer">
+<!-- footer.html -->
+<footer>
+    <div class="frame frame-ruler-before frame-background-dark">
+        <div class="frame-container">
+            <div class="frame-inner">
+                <div class="footer-additional">
+                    <ul class="footer-simplemenu">
+                        <li><a href="https://github.com/TYPO3-Documentation/sphinx_typo3_theme" title="sphinx_typo3_theme" target="_blank">
+                        <span>TYPO3 Theme 4.7.6</span></a></li>
+                    </ul>
+                </div>
+                <div class="footer-meta">
+                    <div class="footer-meta-copyright">
+                        &copy; Copyright 2021, UET-AILab
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+<!-- /footer.html -->
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT: '../',
+            VERSION: '',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE: true
+        };
+    </script>
+    <script type="text/javascript" src="../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../_static/js/underscore.min.js"></script>
+    <script type="text/javascript" src="../_static/js/doctools.min.js"></script>
+    <script type="text/javascript" src="../_static/js/popper.min.js"></script>
+    <script type="text/javascript" src="../_static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/js/theme.min.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="../_static/js/searchtools.min.js"></script>
+    <script type="text/javascript" src="../_static/js/autocomplete.min.js"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script type="text/javascript">
+        jQuery(function() { Search.loadIndex("../searchindex.js"); });
+    </script>
+    <script type="text/javascript" id="searchindexloader"></script>
+<!-- scripts2 --><!-- /scripts2 -->
+<!-- footer2 --><!-- /footer2 -->
+
+</body>
+</html>

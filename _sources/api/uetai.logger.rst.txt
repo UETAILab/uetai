@@ -1,0 +1,37 @@
+uetai.logger package
+====================
+
+Submodules
+----------
+
+uetai.logger.base module
+------------------------
+
+.. automodule:: uetai.logger.base
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+uetai.logger.comet module
+-------------------------
+
+.. automodule:: uetai.logger.comet
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+uetai.logger.wandb module
+-------------------------
+
+.. automodule:: uetai.logger.wandb
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: uetai.logger
+   :members:
+   :undoc-members:
+   :show-inheritance:

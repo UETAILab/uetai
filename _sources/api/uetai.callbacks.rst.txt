@@ -1,0 +1,21 @@
+uetai.callbacks package
+=======================
+
+Submodules
+----------
+
+uetai.callbacks.image\_monitor module
+-------------------------------------
+
+.. automodule:: uetai.callbacks.image_monitor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: uetai.callbacks
+   :members:
+   :undoc-members:
+   :show-inheritance:

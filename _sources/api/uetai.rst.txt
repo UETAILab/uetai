@@ -1,0 +1,31 @@
+uetai package
+=============
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   uetai.callbacks
+   uetai.logger
+   uetai.utilities
+
+Submodules
+----------
+
+uetai.version module
+--------------------
+
+.. automodule:: uetai.version
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: uetai
+   :members:
+   :undoc-members:
+   :show-inheritance:

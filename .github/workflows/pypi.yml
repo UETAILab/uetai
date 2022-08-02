@@ -6,7 +6,7 @@ on:
 
 jobs:
   release:
-    if: github.event_name == 'release' && github.event.action == 'created'
+#    if: github.event_name == 'release' && github.event.action == 'created'
     name: PyPi Release
     runs-on: ubuntu-latest
 

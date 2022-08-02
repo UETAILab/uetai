@@ -35,6 +35,7 @@ class WandbLogger(UetaiLoggerBase):
             workspace: Optional[str] = None,
             experiment=None,
             name=None,
+            api_key: str = None,
             **kwargs,
     ):
         super().__init__()
@@ -46,6 +47,8 @@ class WandbLogger(UetaiLoggerBase):
             **kwargs
         )
         self._wandb_init.update(**kwargs)
+        if api_key:
+            os.environ["WANDB_API_KEY"] = api_key
         self.experiment = self._init_experiment(**self._wandb_init)
         self._experiment_path = self._set_experiment_path()
         self._train_table_summary, self._valid_table_summary = self._set_visualize_table()

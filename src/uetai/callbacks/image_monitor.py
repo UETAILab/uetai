@@ -7,7 +7,7 @@ from torch import Tensor
 from torchvision import transforms
 
 from ..utilities import module_available
-_PT_LIGHTNING_AVAILABEL = module_available('pytorch-lightning')
+_PT_LIGHTNING_AVAILABEL = module_available('pytorch_lightning')
 
 if _PT_LIGHTNING_AVAILABEL:
     import pytorch_lightning as pl
@@ -20,7 +20,7 @@ except (ImportError, AssertionError):
     warnings.warn('Missing package `wandb`. Run `pip install wandb` to install it')
 
 
-class ImageMonitorBase(Callback):
+class ImageMonitorBase(pl.Callback):
     """Base class for monitoring image data.
     """
     def __init__(
@@ -227,14 +227,11 @@ def _log_media(
     :param media: The `wandb.Image` or List of images that going to be logging
     :type media: List[wandb.Image] or wandb.Image
     """
-    if wandb is None:
-        raise ImportError("To log image with `wandb`, please it install with `pip install wandb`")
-    # logger = self._trainer.logger
     if isinstance(media, wandb.Table):
         tag = tag.replace('/', '_')
-    logger.wandb_run.log({tag: media})
+    logger.experiment.log({tag: media})
 
 
 def trainer_finish_run(trainer: "pl.Trainer") -> None:
     logger = trainer.logger
-    logger.wandb_run.finish()
+    logger.experiment.finish()

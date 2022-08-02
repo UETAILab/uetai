@@ -514,9 +514,16 @@ class WandbLogger(UetaiLoggerBase):
         wb_table = wandb.Table(columns=columns, data=table)
         self.experiment.log({'table': wb_table})
 
-    def shap_summary_plot(self, explainer, X_test, attributes: List = None):
+    def shap_summary_plot(self, explainer, X_test, feature_names: List = None):
         """
+        Plot shap explaination
 
+        :param explainer: shap explainer
+        :type explainer: Explainer
+        :param X_test: test sample
+        :type X_test: numpy.array
+        :feature_names: Feature's name
+        :type feature_names: List
         """
         try:
             import shap
@@ -528,7 +535,8 @@ class WandbLogger(UetaiLoggerBase):
 
         # if isinstance(explainer, Explainer):
         shap_values = explainer.shap_values(X_test)
-        shap.summary_plot(shap_values, X_test, feature_names=attributes, show=False)
+
+        shap.summary_plot(shap_values, X_test, feature_names=feature_names, show=False)
         save_file = os.path.join(self._experiment_path, 'shap_result.png')
         plt.savefig(save_file, dpi=200, bbox_inches='tight')
 

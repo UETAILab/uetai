@@ -3,6 +3,9 @@
 torch>=1.6
 numpy >=1.14
 Pillow
+pandas
+pandas-profiling
+shap
 
 # logger =========
 wandb

@@ -388,10 +388,10 @@ class WandbLogger(UetaiLoggerBase):
                 if isinstance(auto_profiling, pd.DataFrame):
                     profile = ProfileReport(auto_profiling, title=self.project_name)
                 else:
-                    try:
+                    if artifact_path[-3:] == 'csv':
                         dataframe = pd.read_csv(artifact_path)
-                    except:
-                        raise TypeError()
+                    else:
+                        raise TypeError(f'Expect file csv, got {artifact_path[-3:]}')
                     profile = ProfileReport(dataframe, title=self.project_name)
                 save_path = os.path.join(self._experiment_path, 'profile_report.html')
                 profile.to_file(save_path)
@@ -481,7 +481,7 @@ class WandbLogger(UetaiLoggerBase):
         :type is_train: bool
         """
         table = self.visualize_table(is_train)
-        if epoch%log_every_n_epoch != 0:
+        if epoch % log_every_n_epoch != 0:
             return
 
         if task == 'image_classify':

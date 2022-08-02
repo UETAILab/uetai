@@ -43,8 +43,7 @@ class TestWandbLogger(unittest.TestCase):
 
         # create a wandb.Table() with corresponding columns
         columns = ['id', 'text', 'prediction', 'gt']
-        test_table = wandb.Table(data=my_data, columns=columns)
-        logger.log_table('table', test_table)
+        logger.log_table('table', my_data, columns)
 
         config = {
             'lr': 0.01,

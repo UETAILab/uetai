@@ -21,4 +21,5 @@ pytest-cov
 parameterized
 
 # callbacks ======
-# torchvision
+torchvision
+pytorch-lightning

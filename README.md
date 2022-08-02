@@ -32,9 +32,9 @@ UETAI provided tools for helping user tracking their experiment, visualizing the
 Firstly, you must sign up for an account from one of these supported MLTE (Machine Learning tracking experiment) tools, each dashboard will give you a unique API key to log in dashboard from any terminal or code:
 
 | Dashboard        	| Status 	|
-|------------------	|--------	|
+|------------------	|-------	|
 | Comet ML         	|    ✅ 	 |
-| Weights & Biases 	|    ❌   |
+| Weights & Biases 	|    ✅   |
 | MLFlow           	|    ❌ 	 |
 
 ### Install `uetai`
@@ -76,7 +76,9 @@ Logging model:
 
 ## Examples
 
-*Coming soon...*
+[Study case 1: Image classification](https://github.com/UETAILab/uetai/blob/main/examples/study-case-1)
+
+[Study case 1: Linear regression](https://github.com/UETAILab/uetai/blob/main/examples/study-case-2)
 
 ## The team
 UETAI is a non-profit project hosted by AI Laboratory of University of Engineering and Technology.

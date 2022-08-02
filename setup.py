@@ -22,7 +22,7 @@ docs = (
     " integrated with ML experiment tracking tools"
 )
 
-version = "0.1.1"
+version = "0.2.1"
 
 with (source_root/"src/uetai/version.py").open("w+", encoding="utf-8") as f:
     f.writelines([
